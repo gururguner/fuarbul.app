@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { isProfessionValue } from "@/lib/professions";
+import { normalizeTurkeyCity } from "@/lib/turkey-cities";
 
 type ProfilePayload = {
   birthDate?: string;
@@ -28,14 +29,19 @@ export async function PATCH(request: Request) {
   const payload = (await request.json()) as ProfilePayload;
   const name = payload.name?.trim() ?? "";
   const surname = payload.surname?.trim() ?? "";
-  const city = payload.city?.trim() ?? "";
+  const rawCity = payload.city?.trim() ?? "";
+  const city = normalizeTurkeyCity(rawCity);
   const profession = payload.profession?.trim() ?? "";
 
-  if (!name || !surname || !city || !profession) {
+  if (!name || !surname || !rawCity || !profession) {
     return NextResponse.json(
       { error: "missing_required_fields" },
       { status: 400 },
     );
+  }
+
+  if (!city) {
+    return NextResponse.json({ error: "invalid_city" }, { status: 400 });
   }
 
   if (!isProfessionValue(profession)) {

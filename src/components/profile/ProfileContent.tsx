@@ -8,6 +8,7 @@ import { useLanguage } from "@/components/providers/LanguageProvider";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { CitySelect } from "@/components/ui/CitySelect";
 import { Input } from "@/components/ui/Input";
 import type { TranslationKey } from "@/lib/i18n";
 import { getProfessionLabel, professionOptions } from "@/lib/professions";
@@ -195,10 +196,11 @@ export function ProfileContent({
                     placeholder="05xx xxx xx xx"
                     type="tel"
                   />
-                  <Input
+                  <CitySelect
                     defaultValue={user.city}
                     label={<RequiredLabel label={t("common.city")} />}
                     name="city"
+                    placeholder={t("common.selectCity")}
                     required
                   />
                 </div>

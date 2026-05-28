@@ -14,9 +14,10 @@ const navItems = [
 ] as const;
 
 export function Header() {
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const { t } = useLanguage();
   const isAuthenticated = status === "authenticated";
+  const isAdmin = session?.user?.role === "ADMIN";
 
   return (
     <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
@@ -60,6 +61,11 @@ export function Header() {
                 <Button href="/profile" size="sm" variant="ghost">
                   {t("common.myProfile")}
                 </Button>
+                {isAdmin ? (
+                  <Button href="/admin" size="sm" variant="ghost">
+                    {t("nav.admin")}
+                  </Button>
+                ) : null}
                 <Button
                   onClick={() => signOut({ redirectTo: "/" })}
                   size="sm"

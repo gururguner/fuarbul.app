@@ -4,25 +4,36 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import type { TranslationKey } from "@/lib/i18n";
+
+type FooterLink = {
+  href: string;
+  labelKey: TranslationKey;
+};
 
 const publicFooterLinks = [
   { href: "/fairs", labelKey: "nav.fairs" },
   { href: "/login", labelKey: "nav.login" },
   { href: "/register", labelKey: "nav.register" },
-] as const;
+] satisfies FooterLink[];
 
 const authenticatedFooterLinks = [
   { href: "/fairs", labelKey: "nav.fairs" },
   { href: "/following", labelKey: "nav.following" },
   { href: "/profile", labelKey: "common.myProfile" },
-] as const;
+] satisfies FooterLink[];
+
+const adminFooterLink = { href: "/admin", labelKey: "nav.admin" } satisfies FooterLink;
 
 export function Footer() {
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const { t } = useLanguage();
-  const footerLinks =
+  const isAdmin = session?.user?.role === "ADMIN";
+  const footerLinks: FooterLink[] =
     status === "authenticated"
-      ? authenticatedFooterLinks
+      ? isAdmin
+        ? [...authenticatedFooterLinks, adminFooterLink]
+        : authenticatedFooterLinks
       : status === "unauthenticated"
         ? publicFooterLinks
         : [];

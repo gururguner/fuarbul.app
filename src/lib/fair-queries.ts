@@ -8,6 +8,7 @@ import {
 } from "@/lib/fairs";
 import { prisma } from "@/lib/prisma";
 import { toSlug } from "@/lib/slug";
+import { normalizeTurkeyCity, turkeyCities } from "@/lib/turkey-cities";
 import type {
   Fair,
   FairDateFilter,
@@ -75,10 +76,22 @@ export async function getAvailableFairCities() {
     },
   });
 
-  return fairs
-    .map((fair) => fair.city)
-    .filter(Boolean)
-    .sort((a, b) => a.localeCompare(b, "tr"));
+  const cities = new Set(
+    fairs
+      .map((fair) => normalizeTurkeyCity(fair.city) ?? fair.city)
+      .filter(Boolean),
+  );
+
+  return Array.from(cities).sort((a, b) => {
+    const cityIndexA = turkeyCities.indexOf(a as (typeof turkeyCities)[number]);
+    const cityIndexB = turkeyCities.indexOf(b as (typeof turkeyCities)[number]);
+
+    if (cityIndexA >= 0 && cityIndexB >= 0) {
+      return cityIndexA - cityIndexB;
+    }
+
+    return a.localeCompare(b, "tr");
+  });
 }
 
 export async function getActiveCategories() {
@@ -352,6 +365,12 @@ async function resolveCityFilter(city?: string) {
   }
 
   const trimmedCity = city.trim();
+  const canonicalCity = normalizeTurkeyCity(trimmedCity);
+
+  if (canonicalCity) {
+    return canonicalCity;
+  }
+
   const requestedSlug = toSlug(trimmedCity);
   const cities = await getAvailableFairCities();
   const matchedCity = cities.find(

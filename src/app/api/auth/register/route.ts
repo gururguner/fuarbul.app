@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { isProfessionValue } from "@/lib/professions";
+import { normalizeTurkeyCity } from "@/lib/turkey-cities";
 
 const minPasswordLength = 8;
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -28,15 +29,20 @@ export async function POST(request: Request) {
   const password = payload.password?.trim() ?? "";
   const name = payload.name?.trim() ?? "";
   const surname = payload.surname?.trim() ?? "";
-  const city = payload.city?.trim() ?? "";
+  const rawCity = payload.city?.trim() ?? "";
+  const city = normalizeTurkeyCity(rawCity);
   const profession = payload.profession?.trim() ?? "";
   const phone = normalizePhone(payload.phone);
 
-  if (!name || !surname || !city || !profession || !email || !password) {
+  if (!name || !surname || !rawCity || !profession || !email || !password) {
     return NextResponse.json(
       { error: "missing_required_fields" },
       { status: 400 },
     );
+  }
+
+  if (!city) {
+    return NextResponse.json({ error: "invalid_city" }, { status: 400 });
   }
 
   if (!isProfessionValue(profession)) {

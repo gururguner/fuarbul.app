@@ -9,6 +9,7 @@ import { GoogleIcon } from "@/components/icons/GoogleIcon";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { CitySelect } from "@/components/ui/CitySelect";
 import { Input } from "@/components/ui/Input";
 import { withNextParam } from "@/lib/auth-redirect";
 import type { TranslationKey } from "@/lib/i18n";
@@ -135,9 +136,10 @@ export function RegisterForm({ nextPath }: RegisterFormProps) {
           </div>
 
           <div className={inputGridClasses}>
-            <Input
+            <CitySelect
               label={<RequiredLabel label={t("common.city")} />}
               name="city"
+              placeholder={t("common.selectCity")}
               required
             />
             <label className="block space-y-2">
@@ -265,6 +267,10 @@ function getRegisterError(
 
   if (errorCode === "invalid_email") {
     return t("auth.invalidEmail");
+  }
+
+  if (errorCode === "invalid_city") {
+    return t("auth.invalidCity");
   }
 
   if (errorCode === "missing_required_fields") {
