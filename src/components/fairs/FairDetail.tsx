@@ -1,0 +1,151 @@
+"use client";
+
+import { useSession } from "next-auth/react";
+import { usePathname, useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
+
+import { MainContainer } from "@/components/layout/MainContainer";
+import { useLanguage } from "@/components/providers/LanguageProvider";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import type { Fair } from "@/types/fair";
+
+type FairDetailProps = {
+  fair: Fair;
+  isFollowing: boolean;
+};
+
+export function FairDetail({
+  fair,
+  isFollowing: initialIsFollowing,
+}: FairDetailProps) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const { status } = useSession();
+  const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
+  const [isPending, startTransition] = useTransition();
+  const { categoryLabel, localizedFair, t, taxonomyLabel } = useLanguage();
+  const displayFair = localizedFair(fair);
+  const isAuthenticated = status === "authenticated";
+  const visibleCategories = displayFair.categories?.length
+    ? displayFair.categories
+    : null;
+
+  const toggleFollow = () => {
+    startTransition(async () => {
+      const response = await fetch(`/api/fairs/${fair.id}/follow`, {
+        method: isFollowing ? "DELETE" : "POST",
+      });
+
+      if (response.status === 401) {
+        router.push(`/login?next=${encodeURIComponent(pathname)}`);
+        return;
+      }
+
+      if (!response.ok) {
+        return;
+      }
+
+      setIsFollowing(!isFollowing);
+      router.refresh();
+    });
+  };
+
+  return (
+    <MainContainer className="py-10 sm:py-14">
+      <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
+        <section className="space-y-6">
+          <div className="flex flex-wrap gap-2">
+            {visibleCategories ? (
+              visibleCategories.map((category) => (
+                <Badge key={category.slug} variant="accent">
+                  {taxonomyLabel(category)}
+                </Badge>
+              ))
+            ) : (
+              <Badge variant="accent">{categoryLabel(displayFair.category)}</Badge>
+            )}
+            <Badge variant="muted">{displayFair.city}</Badge>
+          </div>
+
+          <div className="space-y-4">
+            <h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-5xl">
+              {displayFair.name}
+            </h1>
+            <p className="max-w-3xl text-lg leading-8 text-slate-600">
+              {displayFair.description}
+            </p>
+          </div>
+
+          <dl className="grid gap-4 rounded-lg border border-slate-200 bg-white p-5 shadow-sm sm:grid-cols-2">
+            <DetailItem label={t("common.date")} value={displayFair.dateRange} />
+            <DetailItem label={t("common.city")} value={displayFair.city} />
+            <DetailItem label={t("common.venue")} value={displayFair.venue} />
+            <DetailItem
+              label={t("common.category")}
+              value={
+                visibleCategories
+                  ? visibleCategories.map(taxonomyLabel).join(", ")
+                  : categoryLabel(displayFair.category)
+              }
+            />
+            <DetailItem
+              label={t("common.organizer")}
+              value={displayFair.organizer}
+            />
+          </dl>
+        </section>
+
+        <aside className="h-fit rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+          <h2 className="text-lg font-semibold text-slate-950">
+            {t("fairDetail.actionsTitle")}
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            {t("fairDetail.actionsDescription")}
+          </p>
+          <div className="mt-5 grid gap-3">
+            <Button external href={displayFair.website} variant="outline">
+              {t("common.officialWebsite")}
+            </Button>
+            {isAuthenticated ? (
+              <Button
+                disabled={isPending}
+                onClick={toggleFollow}
+                type="button"
+                variant={isFollowing ? "outline" : "secondary"}
+              >
+                {isFollowing ? t("common.unfollow") : t("common.follow")}
+              </Button>
+            ) : (
+              <Button
+                href={`/login?next=${encodeURIComponent(pathname)}`}
+                variant="secondary"
+              >
+                {t("common.follow")}
+              </Button>
+            )}
+          </div>
+          <p className="mt-4 rounded-lg bg-emerald-50 px-3 py-2 text-sm leading-6 text-emerald-800">
+            {isFollowing
+              ? t("fairDetail.followingState")
+              : t("fairDetail.followPrompt")}
+          </p>
+          {!isAuthenticated ? (
+            <p className="mt-3 text-xs leading-5 text-slate-500">
+              {t("fairDetail.followNote")}
+            </p>
+          ) : null}
+        </aside>
+      </div>
+    </MainContainer>
+  );
+}
+
+function DetailItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt className="text-sm font-medium text-slate-500">{label}</dt>
+      <dd className="mt-1 text-base font-semibold text-slate-950">{value}</dd>
+    </div>
+  );
+}

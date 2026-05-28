@@ -1,0 +1,360 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  PREFER_NOT_TO_SAY
+}
+
+enum FairStatus {
+  DRAFT
+  PUBLISHED
+  UPDATED
+  POSTPONED
+  CANCELLED
+  ARCHIVED
+}
+
+enum SourceName {
+  TOBB
+  IFM
+  TUYAP
+  MANUAL
+  OTHER
+}
+
+enum ImportJobStatus {
+  PENDING
+  RUNNING
+  SUCCESS
+  FAILED
+}
+
+enum NotificationType {
+  EMAIL
+  IN_APP
+}
+
+enum NotificationTrigger {
+  THIRTY_DAYS_BEFORE
+  SEVEN_DAYS_BEFORE
+  ONE_DAY_BEFORE
+  FAIR_STARTED
+}
+
+enum AdminActionType {
+  CREATE
+  UPDATE
+  DELETE
+  PUBLISH
+  UNPUBLISH
+  ARCHIVE
+  MARK_CANCELLED
+  MARK_POSTPONED
+  IMPORT
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  passwordHash  String?
+  name          String    @default("")
+  surname       String    @default("")
+  city          String    @default("")
+  profession    String    @default("")
+  phone         String?
+  birthDate     DateTime?
+  gender        Gender?
+  role          UserRole  @default(USER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts               Account[]
+  sessions               Session[]
+  interests              UserInterest[]
+  subInterests           UserSubInterest[]
+  followedFairs          FollowedFair[]
+  notificationPreference NotificationPreference?
+  notificationLogs       NotificationLog[]
+  adminActionLogs        AdminActionLog[]        @relation("AdminActionUser")
+
+  @@index([email])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Fair {
+  id                 String     @id @default(cuid())
+  name               String
+  slug               String     @unique
+  description        String?
+  startDate          DateTime
+  endDate            DateTime
+  city               String
+  district           String?
+  venue              String
+  hall               String?
+  organizer          String?
+  officialWebsite    String?
+  status             FairStatus @default(DRAFT)
+  isPublished        Boolean    @default(false)
+  isFeatured         Boolean    @default(false)
+  isIstanbulPriority Boolean    @default(false)
+  lastCheckedAt      DateTime?
+  lastChangedAt      DateTime?
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+
+  categories       FairCategory[]
+  subcategories    FairSubcategory[]
+  followedBy       FollowedFair[]
+  notificationLogs NotificationLog[]
+  sources          FairSource[]
+  adminActionLogs  AdminActionLog[]
+
+  @@index([city])
+  @@index([startDate])
+  @@index([status])
+  @@index([isPublished])
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  nameTr      String
+  nameEn      String
+  slug        String   @unique
+  description String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  subcategories Subcategory[]
+  fairs         FairCategory[]
+  userInterests UserInterest[]
+
+  @@index([slug])
+}
+
+model Subcategory {
+  id          String   @id @default(cuid())
+  categoryId  String
+  nameTr      String
+  nameEn      String
+  slug        String   @unique
+  description String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  category         Category          @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  fairs            FairSubcategory[]
+  userSubInterests UserSubInterest[]
+
+  @@index([categoryId])
+  @@index([slug])
+}
+
+model FairCategory {
+  id         String   @id @default(cuid())
+  fairId     String
+  categoryId String
+  createdAt  DateTime @default(now())
+
+  fair     Fair     @relation(fields: [fairId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([fairId, categoryId])
+  @@index([fairId])
+  @@index([categoryId])
+}
+
+model FairSubcategory {
+  id            String   @id @default(cuid())
+  fairId        String
+  subcategoryId String
+  createdAt     DateTime @default(now())
+
+  fair        Fair        @relation(fields: [fairId], references: [id], onDelete: Cascade)
+  subcategory Subcategory @relation(fields: [subcategoryId], references: [id], onDelete: Cascade)
+
+  @@unique([fairId, subcategoryId])
+  @@index([fairId])
+  @@index([subcategoryId])
+}
+
+model UserInterest {
+  id         String   @id @default(cuid())
+  userId     String
+  categoryId String
+  createdAt  DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, categoryId])
+  @@index([userId])
+  @@index([categoryId])
+}
+
+model UserSubInterest {
+  id            String   @id @default(cuid())
+  userId        String
+  subcategoryId String
+  createdAt     DateTime @default(now())
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subcategory Subcategory @relation(fields: [subcategoryId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, subcategoryId])
+  @@index([userId])
+  @@index([subcategoryId])
+}
+
+model FollowedFair {
+  id        String   @id @default(cuid())
+  userId    String
+  fairId    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fair Fair @relation(fields: [fairId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, fairId])
+  @@index([userId])
+  @@index([fairId])
+}
+
+model NotificationPreference {
+  id                     String   @id @default(cuid())
+  userId                 String   @unique
+  emailEnabled           Boolean  @default(true)
+  inAppEnabled           Boolean  @default(true)
+  remindThirtyDaysBefore Boolean  @default(true)
+  remindSevenDaysBefore  Boolean  @default(true)
+  remindOneDayBefore     Boolean  @default(true)
+  remindFairStarted      Boolean  @default(false)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model NotificationLog {
+  id           String              @id @default(cuid())
+  userId       String
+  fairId       String
+  type         NotificationType
+  trigger      NotificationTrigger
+  sentAt       DateTime            @default(now())
+  status       String
+  errorMessage String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fair Fair @relation(fields: [fairId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, fairId, type, trigger])
+  @@index([userId])
+  @@index([fairId])
+}
+
+model FairSource {
+  id         String     @id @default(cuid())
+  fairId     String
+  sourceName SourceName
+  sourceUrl  String?
+  externalId String?
+  rawData    Json?
+  lastSeenAt DateTime?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  fair Fair @relation(fields: [fairId], references: [id], onDelete: Cascade)
+
+  @@index([fairId])
+  @@index([sourceName])
+}
+
+model ImportJob {
+  id           String          @id @default(cuid())
+  sourceName   SourceName
+  status       ImportJobStatus @default(PENDING)
+  startedAt    DateTime?
+  finishedAt   DateTime?
+  foundCount   Int             @default(0)
+  createdCount Int             @default(0)
+  updatedCount Int             @default(0)
+  errorMessage String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  @@index([sourceName])
+}
+
+model AdminActionLog {
+  id          String          @id @default(cuid())
+  adminUserId String?
+  fairId      String?
+  actionType  AdminActionType
+  message     String?
+  metadata    Json?
+  createdAt   DateTime        @default(now())
+
+  adminUser User? @relation("AdminActionUser", fields: [adminUserId], references: [id], onDelete: SetNull)
+  fair      Fair? @relation(fields: [fairId], references: [id], onDelete: SetNull)
+
+  @@index([adminUserId])
+  @@index([fairId])
+}
