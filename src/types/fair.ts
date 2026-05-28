@@ -10,6 +10,7 @@ export type FairLocale = "tr" | "en";
 
 export type FairDateFilter =
   | "all"
+  | "past"
   | "this-week"
   | "this-month"
   | "next-3-months"
@@ -50,6 +51,7 @@ export type Fair = {
   translations: Record<FairLocale, LocalizedFairFields>;
   website: string;
   isFeatured?: boolean;
+  isPast: boolean;
 };
 
 export type LocalizedFair = Omit<Fair, "translations"> & LocalizedFairFields;

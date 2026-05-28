@@ -27,6 +27,9 @@ export async function POST() {
     where: {
       userId,
       fair: {
+        endDate: {
+          gte: startOfToday(),
+        },
         isPublished: true,
         status: FairStatus.PUBLISHED,
       },
@@ -90,4 +93,11 @@ export async function POST() {
     fairName: followedFair.fair.name,
     ok: true,
   });
+}
+
+function startOfToday() {
+  const date = new Date();
+  date.setHours(0, 0, 0, 0);
+
+  return date;
 }

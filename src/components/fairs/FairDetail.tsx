@@ -66,6 +66,9 @@ export function FairDetail({
               <Badge variant="accent">{categoryLabel(displayFair.category)}</Badge>
             )}
             <Badge variant="muted">{displayFair.city}</Badge>
+            {fair.isPast ? (
+              <Badge variant="warning">{t("common.pastFair")}</Badge>
+            ) : null}
           </div>
 
           <div className="space-y-4">
@@ -94,6 +97,12 @@ export function FairDetail({
               value={displayFair.organizer}
             />
           </dl>
+
+          {fair.isPast ? (
+            <p className="rounded-lg border border-amber-100 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
+              {t("fairDetail.pastFairNote")}
+            </p>
+          ) : null}
         </section>
 
         <aside className="h-fit rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
@@ -107,7 +116,11 @@ export function FairDetail({
             <Button external href={displayFair.website} variant="outline">
               {t("common.officialWebsite")}
             </Button>
-            {isAuthenticated ? (
+            {fair.isPast ? (
+              <Button disabled type="button" variant="outline">
+                {t("fairDetail.pastFollowDisabled")}
+              </Button>
+            ) : isAuthenticated ? (
               <Button
                 disabled={isPending}
                 onClick={toggleFollow}
@@ -126,11 +139,13 @@ export function FairDetail({
             )}
           </div>
           <p className="mt-4 rounded-lg bg-emerald-50 px-3 py-2 text-sm leading-6 text-emerald-800">
-            {isFollowing
-              ? t("fairDetail.followingState")
-              : t("fairDetail.followPrompt")}
+            {fair.isPast
+              ? t("fairDetail.pastFollowDisabled")
+              : isFollowing
+                ? t("fairDetail.followingState")
+                : t("fairDetail.followPrompt")}
           </p>
-          {!isAuthenticated ? (
+          {!isAuthenticated && !fair.isPast ? (
             <p className="mt-3 text-xs leading-5 text-slate-500">
               {t("fairDetail.followNote")}
             </p>

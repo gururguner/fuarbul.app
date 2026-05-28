@@ -25,10 +25,10 @@ export function FairsPageContent({
 }: FairsPageContentProps) {
   const { fairCount, t } = useLanguage();
   const hasActiveFilters = Boolean(
-    filters.q ||
+      filters.q ||
       filters.city ||
       filters.category ||
-      (filters.date && filters.date !== "all") ||
+      (filters.date && filters.date !== "upcoming") ||
       typeof filters.featured === "boolean",
   );
 

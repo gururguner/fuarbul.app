@@ -59,6 +59,18 @@ const categories = [
     nameEn: "Furniture / Decoration",
     slug: "mobilya-dekorasyon",
   },
+  { nameTr: "Yapı / İnşaat", nameEn: "Construction", slug: "yapi-insaat" },
+  { nameTr: "Evcil Hayvan", nameEn: "Pet", slug: "evcil-hayvan" },
+  { nameTr: "Tekstil / Moda", nameEn: "Textile / Fashion", slug: "tekstil-moda" },
+  { nameTr: "Ambalaj", nameEn: "Packaging", slug: "ambalaj" },
+  {
+    nameTr: "Endüstri / Makine",
+    nameEn: "Industry / Machinery",
+    slug: "endustri-makine",
+  },
+  { nameTr: "Denizcilik", nameEn: "Maritime", slug: "denizcilik" },
+  { nameTr: "Enerji", nameEn: "Energy", slug: "enerji" },
+  { nameTr: "Spor / Outdoor", nameEn: "Sports / Outdoor", slug: "spor-outdoor" },
 ] as const;
 
 const subcategoriesByCategorySlug = {

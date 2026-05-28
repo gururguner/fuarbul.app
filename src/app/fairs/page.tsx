@@ -12,6 +12,7 @@ type FairsPageProps = {
 
 const dateFilterValues: FairDateFilter[] = [
   "all",
+  "past",
   "this-week",
   "this-month",
   "next-3-months",

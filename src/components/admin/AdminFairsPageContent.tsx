@@ -10,7 +10,9 @@ import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import {
+  adminFairQuickFilterValues,
   fairStatusValues,
+  type AdminFairQuickFilterValue,
   type AdminFairFilters,
   type FairStatusValue,
 } from "@/lib/admin-fair-options";
@@ -63,6 +65,10 @@ export function AdminFairsPageContent({
 
     if (status && status !== "ALL") {
       params.set("status", status);
+    }
+
+    if (filters.quick) {
+      params.set("quick", filters.quick);
     }
 
     const queryString = params.toString();
@@ -128,6 +134,24 @@ export function AdminFairsPageContent({
           <Button type="submit">{t("common.filter")}</Button>
         </div>
       </form>
+
+      <div className="mb-6 flex flex-wrap gap-2">
+        {adminFairQuickFilterValues.map((quickFilter) => (
+          <Button
+            href={getQuickFilterHref(pathname, quickFilter)}
+            key={quickFilter}
+            size="sm"
+            variant={filters.quick === quickFilter ? "secondary" : "outline"}
+          >
+            {getQuickFilterLabel(quickFilter, t)}
+          </Button>
+        ))}
+        {filters.quick ? (
+          <Button href={pathname} size="sm" variant="ghost">
+            {t("common.clearFilters")}
+          </Button>
+        ) : null}
+      </div>
 
       <div className="grid gap-4">
         {fairs.map((fair) => (
@@ -278,4 +302,28 @@ function getStatusLabel(
   };
 
   return labels[status];
+}
+
+function getQuickFilterHref(pathname: string, quick: AdminFairQuickFilterValue) {
+  const params = new URLSearchParams();
+  params.set("quick", quick);
+
+  return `${pathname}?${params.toString()}`;
+}
+
+function getQuickFilterLabel(
+  quick: AdminFairQuickFilterValue,
+  t: (key: TranslationKey) => string,
+) {
+  const labels = {
+    drafts: t("adminPage.quickDrafts"),
+    "istanbul-priority": t("adminPage.quickIstanbulPriority"),
+    "needs-review": t("adminPage.quickNeedsReview"),
+    past: t("adminPage.quickPast"),
+    published: t("adminPage.quickPublished"),
+    tobb: t("adminPage.quickTobb"),
+    upcoming: t("adminPage.quickUpcoming"),
+  };
+
+  return labels[quick];
 }

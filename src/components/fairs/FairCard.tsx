@@ -40,6 +40,9 @@ export function FairCard({ fair, isFollowing = false }: FairCardProps) {
           {fair.isFeatured ? (
             <Badge variant="warning">{t("common.featured")}</Badge>
           ) : null}
+          {fair.isPast ? (
+            <Badge variant="muted">{t("common.pastFair")}</Badge>
+          ) : null}
           {isFollowing ? (
             <Badge variant="muted">{t("nav.following")}</Badge>
           ) : null}

@@ -165,5 +165,63 @@ function buildAdminFairWhere(filters: AdminFairFilters) {
     });
   }
 
+  if (filters.quick === "published") {
+    and.push({
+      isPublished: true,
+    });
+  }
+
+  if (filters.quick === "upcoming") {
+    and.push({
+      endDate: {
+        gte: startOfToday(),
+      },
+    });
+  }
+
+  if (filters.quick === "past") {
+    and.push({
+      endDate: {
+        lt: startOfToday(),
+      },
+    });
+  }
+
+  if (filters.quick === "drafts") {
+    and.push({
+      status: "DRAFT",
+    });
+  }
+
+  if (filters.quick === "needs-review") {
+    and.push({
+      isPublished: false,
+      status: "DRAFT",
+    });
+  }
+
+  if (filters.quick === "tobb") {
+    and.push({
+      sources: {
+        some: {
+          sourceName: "TOBB",
+        },
+      },
+    });
+  }
+
+  if (filters.quick === "istanbul-priority") {
+    and.push({
+      isIstanbulPriority: true,
+    });
+  }
+
   return and.length ? { AND: and } : undefined;
+}
+
+function startOfToday() {
+  const date = new Date();
+  date.setHours(0, 0, 0, 0);
+
+  return date;
 }

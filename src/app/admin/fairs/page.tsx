@@ -1,7 +1,9 @@
 import { AdminFairsPageContent } from "@/components/admin/AdminFairsPageContent";
 import { getAdminFairs } from "@/lib/admin-fair-queries";
 import {
+  adminFairQuickFilterValues,
   fairStatusValues,
+  type AdminFairQuickFilterValue,
   type AdminFairFilters,
   type FairStatusValue,
 } from "@/lib/admin-fair-options";
@@ -36,10 +38,12 @@ function parseFilters(
   searchParams: Record<string, string | string[] | undefined>,
 ): AdminFairFilters {
   const q = getParam(searchParams, "q");
+  const quick = getParam(searchParams, "quick");
   const status = getParam(searchParams, "status");
 
   return {
     q,
+    quick: isAdminQuickFilter(quick) ? quick : undefined,
     status: isFairStatusFilter(status) ? status : status === "ALL" ? "ALL" : undefined,
   };
 }
@@ -56,4 +60,8 @@ function getParam(
 
 function isFairStatusFilter(value: string): value is FairStatusValue {
   return fairStatusValues.includes(value as FairStatusValue);
+}
+
+function isAdminQuickFilter(value: string): value is AdminFairQuickFilterValue {
+  return adminFairQuickFilterValues.includes(value as AdminFairQuickFilterValue);
 }

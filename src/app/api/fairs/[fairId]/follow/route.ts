@@ -27,6 +27,10 @@ export async function POST(_request: Request, { params }: FollowRouteContext) {
     return NextResponse.json({ error: "fair_not_found" }, { status: 404 });
   }
 
+  if (isPastFair(fair.endDate)) {
+    return NextResponse.json({ error: "fair_ended" }, { status: 400 });
+  }
+
   await prisma.followedFair.upsert({
     create: {
       fairId,
@@ -72,7 +76,15 @@ function getPublishedFair(fairId: string) {
       status: FairStatus.PUBLISHED,
     },
     select: {
+      endDate: true,
       id: true,
     },
   });
+}
+
+function isPastFair(endDate: Date) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return endDate < today;
 }

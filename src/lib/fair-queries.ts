@@ -56,12 +56,9 @@ export async function getFilteredFairs(filters: FairFilters = {}) {
   const fairs = await prisma.fair.findMany({
     where,
     include: fairInclude,
-    orderBy: {
-      startDate: "asc",
-    },
   });
 
-  return fairs.map(mapFairToUiFair);
+  return sortFilteredFairs(fairs, filters.date).map(mapFairToUiFair);
 }
 
 export async function getAvailableFairCities() {
@@ -120,6 +117,9 @@ export async function getFeaturedFairs() {
   const fairs = await prisma.fair.findMany({
     where: {
       ...publishedFairWhere,
+      endDate: {
+        gte: startOfToday(),
+      },
       isFeatured: true,
     },
     include: fairInclude,
@@ -135,7 +135,7 @@ export async function getUpcomingFairs(limit?: number) {
   const fairs = await prisma.fair.findMany({
     where: {
       ...publishedFairWhere,
-      startDate: {
+      endDate: {
         gte: startOfToday(),
       },
     },
@@ -297,6 +297,7 @@ function mapFairToUiFair(fair: FairWithRelations): Fair {
     translations: buildFairTranslations(fair),
     website: fair.officialWebsite ?? "#",
     isFeatured: fair.isFeatured,
+    isPast: isPastFair(fair.endDate),
   };
 }
 
@@ -312,6 +313,32 @@ async function buildFilteredFairWhere(filters: FairFilters) {
         { city: { contains: query, mode: "insensitive" } },
         { venue: { contains: query, mode: "insensitive" } },
         { organizer: { contains: query, mode: "insensitive" } },
+        {
+          categories: {
+            some: {
+              category: {
+                OR: [
+                  { nameTr: { contains: query, mode: "insensitive" } },
+                  { nameEn: { contains: query, mode: "insensitive" } },
+                  { slug: { contains: toSlug(query), mode: "insensitive" } },
+                ],
+              },
+            },
+          },
+        },
+        {
+          subcategories: {
+            some: {
+              subcategory: {
+                OR: [
+                  { nameTr: { contains: query, mode: "insensitive" } },
+                  { nameEn: { contains: query, mode: "insensitive" } },
+                  { slug: { contains: toSlug(query), mode: "insensitive" } },
+                ],
+              },
+            },
+          },
+        },
       ],
     });
   }
@@ -340,12 +367,10 @@ async function buildFilteredFairWhere(filters: FairFilters) {
     });
   }
 
-  const dateRange = getDateRange(filters.date);
+  const dateWhere = getDateWhere(filters.date);
 
-  if (dateRange) {
-    and.push({
-      startDate: dateRange,
-    });
+  if (dateWhere) {
+    and.push(dateWhere);
   }
 
   if (typeof filters.featured === "boolean") {
@@ -380,41 +405,84 @@ async function resolveCityFilter(city?: string) {
   return matchedCity ?? trimmedCity;
 }
 
-function getDateRange(date?: FairDateFilter): Prisma.DateTimeFilter | undefined {
-  if (!date || date === "all") {
+function getDateWhere(date?: FairDateFilter): Prisma.FairWhereInput | undefined {
+  if (date === "all") {
     return undefined;
   }
 
   const today = startOfToday();
 
-  if (date === "upcoming") {
+  if (!date || date === "upcoming") {
     return {
-      gte: today,
+      endDate: {
+        gte: today,
+      },
+    };
+  }
+
+  if (date === "past") {
+    return {
+      endDate: {
+        lt: today,
+      },
     };
   }
 
   if (date === "this-week") {
     return {
-      gte: today,
-      lte: addDays(today, 7),
+      startDate: {
+        gte: today,
+        lte: addDays(today, 7),
+      },
     };
   }
 
   if (date === "this-month") {
     return {
-      gte: today,
-      lte: endOfCurrentMonth(today),
+      startDate: {
+        gte: today,
+        lte: endOfCurrentMonth(today),
+      },
     };
   }
 
   if (date === "next-3-months") {
     return {
-      gte: today,
-      lte: addMonths(today, 3),
+      startDate: {
+        gte: today,
+        lte: addMonths(today, 3),
+      },
     };
   }
 
   return undefined;
+}
+
+function sortFilteredFairs(
+  fairs: FairWithRelations[],
+  date?: FairDateFilter,
+) {
+  const scope = date ?? "upcoming";
+  const today = startOfToday();
+
+  return [...fairs].sort((a, b) => {
+    const aIsPast = a.endDate < today;
+    const bIsPast = b.endDate < today;
+
+    if (scope === "past") {
+      return b.startDate.getTime() - a.startDate.getTime();
+    }
+
+    if (scope === "all" && aIsPast !== bIsPast) {
+      return aIsPast ? 1 : -1;
+    }
+
+    if (scope === "all" && aIsPast && bIsPast) {
+      return b.startDate.getTime() - a.startDate.getTime();
+    }
+
+    return a.startDate.getTime() - b.startDate.getTime();
+  });
 }
 
 function buildFairTranslations(
@@ -496,6 +564,10 @@ function startOfToday() {
   date.setHours(0, 0, 0, 0);
 
   return date;
+}
+
+function isPastFair(endDate: Date) {
+  return endDate < startOfToday();
 }
 
 function addDays(date: Date, days: number) {

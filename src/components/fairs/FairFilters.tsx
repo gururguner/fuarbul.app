@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import type { FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { Button } from "@/components/ui/Button";
@@ -22,20 +22,38 @@ export function FairFilters({ categories, cities, filters }: FairFiltersProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { t, taxonomyLabel } = useLanguage();
+  const [query, setQuery] = useState(filters.q ?? "");
+  const [city, setCity] = useState(filters.city ? toSlug(filters.city) : "");
+  const [category, setCategory] = useState(filters.category ?? "");
+  const [date, setDate] = useState<string>(filters.date ?? "upcoming");
+  const [featured, setFeatured] = useState<string>(
+    typeof filters.featured === "boolean" ? String(filters.featured) : "",
+  );
+
+  useEffect(() => {
+    setQuery(filters.q ?? "");
+    setCity(filters.city ? toSlug(filters.city) : "");
+    setCategory(filters.category ?? "");
+    setDate(filters.date ?? "upcoming");
+    setFeatured(
+      typeof filters.featured === "boolean" ? String(filters.featured) : "",
+    );
+  }, [
+    filters.category,
+    filters.city,
+    filters.date,
+    filters.featured,
+    filters.q,
+  ]);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const formData = new FormData(event.currentTarget);
     const params = new URLSearchParams();
-    const query = getFormValue(formData, "q");
-    const city = getFormValue(formData, "city");
-    const category = getFormValue(formData, "category");
-    const date = getFormValue(formData, "date");
-    const featured = getFormValue(formData, "featured");
+    const trimmedQuery = query.trim();
 
-    if (query) {
-      params.set("q", query);
+    if (trimmedQuery) {
+      params.set("q", trimmedQuery);
     }
 
     if (city) {
@@ -46,7 +64,7 @@ export function FairFilters({ categories, cities, filters }: FairFiltersProps) {
       params.set("category", category);
     }
 
-    if (date && date !== "all") {
+    if (date && date !== "upcoming") {
       params.set("date", date);
     }
 
@@ -59,6 +77,11 @@ export function FairFilters({ categories, cities, filters }: FairFiltersProps) {
   };
 
   const clearFilters = () => {
+    setQuery("");
+    setCity("");
+    setCategory("");
+    setDate("upcoming");
+    setFeatured("");
     router.push(pathname);
   };
 
@@ -69,11 +92,12 @@ export function FairFilters({ categories, cities, filters }: FairFiltersProps) {
     >
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-[1.35fr_1fr_1fr_1fr_1fr]">
         <Input
-          defaultValue={filters.q ?? ""}
           label={t("common.search")}
           name="q"
+          onChange={(event) => setQuery(event.target.value)}
           placeholder={t("fairsPage.searchPlaceholder")}
           type="search"
+          value={query}
         />
 
         <label className="block space-y-2">
@@ -82,8 +106,9 @@ export function FairFilters({ categories, cities, filters }: FairFiltersProps) {
           </span>
           <select
             className={selectClasses}
-            defaultValue={filters.city ? toSlug(filters.city) : ""}
             name="city"
+            onChange={(event) => setCity(event.target.value)}
+            value={city}
           >
             <option value="">{t("common.allCities")}</option>
             {cities.map((city) => (
@@ -100,8 +125,9 @@ export function FairFilters({ categories, cities, filters }: FairFiltersProps) {
           </span>
           <select
             className={selectClasses}
-            defaultValue={filters.category ?? ""}
             name="category"
+            onChange={(event) => setCategory(event.target.value)}
+            value={category}
           >
             <option value="">{t("common.allCategories")}</option>
             {categories.map((category) => (
@@ -118,14 +144,16 @@ export function FairFilters({ categories, cities, filters }: FairFiltersProps) {
           </span>
           <select
             className={selectClasses}
-            defaultValue={filters.date ?? "all"}
             name="date"
+            onChange={(event) => setDate(event.target.value)}
+            value={date}
           >
-            <option value="all">{t("common.allDates")}</option>
+            <option value="upcoming">{t("common.upcomingFairs")}</option>
+            <option value="past">{t("common.pastFairs")}</option>
+            <option value="all">{t("common.allFairs")}</option>
             <option value="this-week">{t("common.thisWeek")}</option>
             <option value="this-month">{t("common.thisMonth")}</option>
             <option value="next-3-months">{t("common.nextThreeMonths")}</option>
-            <option value="upcoming">{t("common.upcomingFairs")}</option>
           </select>
         </label>
 
@@ -135,12 +163,9 @@ export function FairFilters({ categories, cities, filters }: FairFiltersProps) {
           </span>
           <select
             className={selectClasses}
-            defaultValue={
-              typeof filters.featured === "boolean"
-                ? String(filters.featured)
-                : ""
-            }
             name="featured"
+            onChange={(event) => setFeatured(event.target.value)}
+            value={featured}
           >
             <option value="">{t("common.allFairs")}</option>
             <option value="true">{t("common.featuredOnly")}</option>
@@ -157,10 +182,4 @@ export function FairFilters({ categories, cities, filters }: FairFiltersProps) {
       </div>
     </form>
   );
-}
-
-function getFormValue(formData: FormData, key: string) {
-  const value = formData.get(key);
-
-  return typeof value === "string" ? value.trim() : "";
 }

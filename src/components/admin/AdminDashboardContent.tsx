@@ -43,7 +43,12 @@ export function AdminDashboardContent({ stats }: AdminDashboardContentProps) {
             {t("adminPage.description")}
           </p>
         </div>
-        <Button href="/admin/fairs">{t("adminPage.fairManagement")}</Button>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button href="/admin/fairs">{t("adminPage.fairManagement")}</Button>
+          <Button href="/admin/import/tobb" variant="outline">
+            {t("adminImport.tobbTitle")}
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

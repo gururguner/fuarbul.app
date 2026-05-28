@@ -56,6 +56,9 @@ export async function getReminderCandidates(
   const followedFairs = await prisma.followedFair.findMany({
     where: {
       fair: {
+        endDate: {
+          gte: startOfDay(referenceDate),
+        },
         isPublished: true,
         startDate: dateRange,
         status: FairStatus.PUBLISHED,
