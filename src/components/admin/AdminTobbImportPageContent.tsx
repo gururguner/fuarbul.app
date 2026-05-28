@@ -13,6 +13,7 @@ import type { TranslationKey } from "@/lib/i18n";
 type TobbImportResult = {
   autoPublishedCount: number;
   createdCount: number;
+  draftSavedCount: number;
   dryRun: boolean;
   errors: string[];
   failedCount: number;
@@ -26,12 +27,21 @@ type TobbImportResult = {
   updatedCount: number;
 };
 
+type CategoryBackfillResult = {
+  addedRelationCount: number;
+  scannedCount: number;
+  stillMissingCount: number;
+  updatedCount: number;
+};
+
 type TobbImportPreviewRow = {
   city: string;
   confidenceScore: number;
   endDate: string | null;
   errors: string[];
   externalId: string | null;
+  isPastFair: boolean;
+  matchedCategoryFromName: boolean;
   name: string;
   publishDecision:
     | "AUTO_PUBLISH"
@@ -58,6 +68,10 @@ export function AdminTobbImportPageContent() {
   const [loadingMode, setLoadingMode] = useState<"dryRun" | "import" | null>(
     null,
   );
+  const [isBackfilling, setIsBackfilling] = useState(false);
+  const [backfillResult, setBackfillResult] =
+    useState<CategoryBackfillResult | null>(null);
+  const [backfillError, setBackfillError] = useState("");
   const [result, setResult] = useState<TobbImportResult | null>(null);
   const [error, setError] = useState("");
 
@@ -102,6 +116,37 @@ export function AdminTobbImportPageContent() {
     } finally {
       setIsSubmitting(false);
       setLoadingMode(null);
+    }
+  };
+
+  const handleBackfillCategories = async () => {
+    if (isBackfilling) {
+      return;
+    }
+
+    setBackfillError("");
+    setBackfillResult(null);
+    setIsBackfilling(true);
+
+    try {
+      const response = await fetch("/api/admin/fairs/backfill-categories", {
+        method: "POST",
+      });
+      const data = (await response.json()) as {
+        error?: string;
+        result?: CategoryBackfillResult;
+      };
+
+      if (!response.ok || !data.result) {
+        setBackfillError(t("adminImport.categoryBackfillFailed"));
+        return;
+      }
+
+      setBackfillResult(data.result);
+    } catch {
+      setBackfillError(t("adminImport.categoryBackfillFailed"));
+    } finally {
+      setIsBackfilling(false);
     }
   };
 
@@ -206,6 +251,7 @@ export function AdminTobbImportPageContent() {
                   <ResultItem label={t("adminImport.needsReviewCount")} value={result.needsReviewCount} />
                   <ResultItem label={t("adminImport.pastFairCount")} value={result.pastFairCount} />
                   <ResultItem label={t("adminImport.autoPublishedCount")} value={result.autoPublishedCount} />
+                  <ResultItem label={t("adminImport.draftSavedCount")} value={result.draftSavedCount} />
                 </div>
                 {result.dryRun ? (
                   <Badge variant="accent">{t("adminImport.dryRun")}</Badge>
@@ -221,6 +267,50 @@ export function AdminTobbImportPageContent() {
                 {t("adminImport.noResultsYet")}
               </p>
             )}
+
+            <div className="mt-6 rounded-lg border border-slate-200 bg-slate-50 p-3">
+              <p className="text-sm font-semibold text-slate-950">
+                {t("adminImport.categoryBackfillTitle")}
+              </p>
+              <p className="mt-1 text-xs leading-5 text-slate-500">
+                {t("adminImport.categoryBackfillDescription")}
+              </p>
+              <Button
+                className="mt-3"
+                disabled={isBackfilling}
+                onClick={handleBackfillCategories}
+                size="sm"
+                type="button"
+                variant="outline"
+              >
+                {isBackfilling
+                  ? t("adminImport.categoryBackfillRunning")
+                  : t("adminImport.suggestMissingCategories")}
+              </Button>
+              {backfillError ? (
+                <p className="mt-3 text-sm text-red-700">{backfillError}</p>
+              ) : null}
+              {backfillResult ? (
+                <div className="mt-3 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
+                  <ResultItem
+                    label={t("adminImport.scannedCount")}
+                    value={backfillResult.scannedCount}
+                  />
+                  <ResultItem
+                    label={t("adminImport.updatedCount")}
+                    value={backfillResult.updatedCount}
+                  />
+                  <ResultItem
+                    label={t("adminImport.addedRelationCount")}
+                    value={backfillResult.addedRelationCount}
+                  />
+                  <ResultItem
+                    label={t("adminImport.stillMissingCount")}
+                    value={backfillResult.stillMissingCount}
+                  />
+                </div>
+              ) : null}
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -264,15 +354,24 @@ export function AdminTobbImportPageContent() {
                             {formatDate(row.endDate, locale)}
                           </td>
                           <td className="px-3 py-3">
-                            {row.suggestedCategorySlugs.length
-                              ? row.suggestedCategorySlugs.join(", ")
-                              : "-"}
+                            {row.suggestedCategorySlugs.length ? (
+                              <>
+                                {row.suggestedCategorySlugs.join(", ")}
+                                {row.matchedCategoryFromName ? (
+                                  <span className="mt-1 block text-xs text-emerald-700">
+                                    {t("adminImport.matchedFromName")}
+                                  </span>
+                                ) : null}
+                              </>
+                            ) : (
+                              "-"
+                            )}
                           </td>
                           <td className="px-3 py-3 font-semibold">
                             {row.confidenceScore}
                           </td>
                           <td className="px-3 py-3">
-                            {getReviewStatusLabel(row.reviewStatus, t)}
+                            {getReviewStatusLabel(row, t)}
                           </td>
                           <td className="px-3 py-3">
                             {formatReviewReasons(row.reviewReasons, t)}
@@ -405,16 +504,20 @@ function getImportError(
 }
 
 function getReviewStatusLabel(
-  status: TobbImportPreviewRow["reviewStatus"],
+  row: TobbImportPreviewRow,
   t: (key: TranslationKey) => string,
 ) {
+  if (row.reviewStatus === "READY_TO_PUBLISH" && row.isPastFair) {
+    return t("adminImport.reviewPastReadyToPublish");
+  }
+
   const labels = {
     NEEDS_REVIEW: t("adminImport.reviewNeedsReview"),
     READY_TO_PUBLISH: t("adminImport.reviewReadyToPublish"),
     SKIPPED: t("adminImport.reviewSkipped"),
   };
 
-  return labels[status];
+  return labels[row.reviewStatus];
 }
 
 function getPublishDecisionLabel(

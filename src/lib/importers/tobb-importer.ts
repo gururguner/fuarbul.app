@@ -3,6 +3,7 @@ import "server-only";
 import * as XLSX from "xlsx";
 
 import { prisma } from "@/lib/prisma";
+import { suggestFairCategorySlugs } from "@/lib/fair-category-matcher";
 import { toSlug } from "@/lib/slug";
 import { normalizeTurkeyCity } from "@/lib/turkey-cities";
 
@@ -27,6 +28,7 @@ export type NormalizedTobbFairRow = {
   externalId: string | null;
   fairType: string | null;
   isIstanbulPriority: boolean;
+  matchedCategoryFromName: boolean;
   name: string;
   officialWebsite: string | null;
   organizer: string | null;
@@ -44,6 +46,7 @@ export type NormalizedTobbFairRow = {
 export type TobbImportResult = {
   autoPublishedCount: number;
   createdCount: number;
+  draftSavedCount: number;
   dryRun: boolean;
   errors: string[];
   failedCount: number;
@@ -63,6 +66,8 @@ export type TobbImportPreviewRow = {
   endDate: string | null;
   errors: string[];
   externalId: string | null;
+  isPastFair: boolean;
+  matchedCategoryFromName: boolean;
   name: string;
   publishDecision: TobbPublishDecision;
   reviewReasons: string[];
@@ -183,6 +188,15 @@ export function normalizeTobbFairRow(row: RawTobbRow): NormalizedTobbFairRow {
   const year = startDate?.getFullYear() ?? new Date().getFullYear();
   const slug = toSlug(`${name} ${year}`);
   const description = buildDescription({ fairType, productGroups, topic });
+  const categorySuggestion = suggestFairCategorySlugs({
+    description,
+    fairType,
+    name,
+    organizer,
+    productGroups,
+    topic,
+    venue,
+  });
   const errors = [
     ...(!name ? ["missing_name"] : []),
     ...(!startDate ? ["missing_or_invalid_start_date"] : []),
@@ -200,6 +214,7 @@ export function normalizeTobbFairRow(row: RawTobbRow): NormalizedTobbFairRow {
     externalId,
     fairType,
     isIstanbulPriority: getIstanbulPriority(city, venue),
+    matchedCategoryFromName: categorySuggestion.matchedFromName,
     name,
     officialWebsite,
     organizer,
@@ -209,11 +224,7 @@ export function normalizeTobbFairRow(row: RawTobbRow): NormalizedTobbFairRow {
     rowNumber: row.__rowNumber ?? 0,
     slug,
     startDate,
-    suggestedCategorySlugs: suggestCategorySlugs(
-      [name, topic, productGroups, fairType, venue, organizer]
-        .filter(Boolean)
-        .join(" "),
-    ),
+    suggestedCategorySlugs: categorySuggestion.slugs,
     topic,
     venue,
   };
@@ -246,6 +257,7 @@ export async function importTobbFairs({
     const result: TobbImportResult = {
       autoPublishedCount: 0,
       createdCount: 0,
+      draftSavedCount: 0,
       dryRun,
       errors: [],
       failedCount: 0,
@@ -378,6 +390,7 @@ export async function importTobbFairs({
                 externalId: row.externalId,
                 confidenceScore: assessment.confidenceScore,
                 isPastFair: assessment.isPastFair,
+                matchedCategoryFromName: row.matchedCategoryFromName,
                 publishDecision: assessment.publishDecision,
                 reviewReasons: assessment.reviewReasons,
                 reviewStatus: assessment.reviewStatus,
@@ -578,6 +591,14 @@ function updateAssessmentCounts(
 
   if (assessment.reviewStatus === "NEEDS_REVIEW") {
     result.needsReviewCount += 1;
+  }
+
+  if (
+    assessment.reviewStatus !== "SKIPPED" &&
+    assessment.publishDecision !== "AUTO_PUBLISH" &&
+    assessment.publishDecision !== "PAST_AUTO_PUBLISH"
+  ) {
+    result.draftSavedCount += 1;
   }
 }
 
@@ -1154,6 +1175,7 @@ async function saveSuggestedCategories(fairId: string, categorySlugs: string[]) 
 
   const categories = await prisma.category.findMany({
     where: {
+      isActive: true,
       slug: {
         in: categorySlugs,
       },
@@ -1206,6 +1228,7 @@ async function saveFairSource(
         confidenceScore: assessment.confidenceScore,
         duplicateUncertain: assessment.duplicateUncertain,
         isPastFair: assessment.isPastFair,
+        matchedCategoryFromName: row.matchedCategoryFromName,
         publishDecision: assessment.publishDecision,
         reviewReasons: assessment.reviewReasons,
         reviewStatus: assessment.reviewStatus,
@@ -1241,6 +1264,8 @@ function toPreviewRow(
     endDate: row.endDate ? row.endDate.toISOString() : null,
     errors: row.errors,
     externalId: row.externalId,
+    isPastFair: assessment.isPastFair,
+    matchedCategoryFromName: row.matchedCategoryFromName,
     name: row.name,
     publishDecision: assessment.publishDecision,
     reviewReasons: assessment.reviewReasons,

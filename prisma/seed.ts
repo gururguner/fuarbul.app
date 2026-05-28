@@ -59,6 +59,21 @@ const categories = [
     nameEn: "Furniture / Decoration",
     slug: "mobilya-dekorasyon",
   },
+  {
+    nameTr: "Sanat / El Sanatları",
+    nameEn: "Art / Handicrafts",
+    slug: "sanat-el-sanatlari",
+  },
+  {
+    nameTr: "Hediyelik Eşya",
+    nameEn: "Souvenirs / Gifts",
+    slug: "hediyelik-esya",
+  },
+  {
+    nameTr: "Ticaret / Sanayi",
+    nameEn: "Trade / Industry",
+    slug: "ticaret-sanayi",
+  },
   { nameTr: "Yapı / İnşaat", nameEn: "Construction", slug: "yapi-insaat" },
   { nameTr: "Evcil Hayvan", nameEn: "Pet", slug: "evcil-hayvan" },
   { nameTr: "Tekstil / Moda", nameEn: "Textile / Fashion", slug: "tekstil-moda" },
@@ -68,7 +83,7 @@ const categories = [
     nameEn: "Industry / Machinery",
     slug: "endustri-makine",
   },
-  { nameTr: "Denizcilik", nameEn: "Maritime", slug: "denizcilik" },
+  { nameTr: "Denizcilik", nameEn: "Marine", slug: "denizcilik" },
   { nameTr: "Enerji", nameEn: "Energy", slug: "enerji" },
   { nameTr: "Spor / Outdoor", nameEn: "Sports / Outdoor", slug: "spor-outdoor" },
 ] as const;

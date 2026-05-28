@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import {
   archiveAdminFair,
+  deleteAdminFair,
   moveAdminFairToDraft,
   publishAdminFair,
   toggleAdminFairFeatured,
@@ -79,6 +80,30 @@ export async function PATCH(
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "action_failed" },
+      { status: 400 },
+    );
+  }
+}
+
+export async function DELETE(
+  _request: Request,
+  { params }: AdminFairRouteContext,
+) {
+  const adminUser = await getAdminUser();
+
+  if (!adminUser) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 403 });
+  }
+
+  const { id } = await params;
+
+  try {
+    await deleteAdminFair(adminUser.id, id);
+
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "delete_failed" },
       { status: 400 },
     );
   }

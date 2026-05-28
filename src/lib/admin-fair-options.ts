@@ -19,12 +19,17 @@ export const adminFairQuickFilterValues = [
   "istanbul-priority",
 ] as const;
 
+export const adminFairPageSizeValues = [20, 50, 100] as const;
+
 export type FairStatusValue = (typeof fairStatusValues)[number];
 export type SourceNameValue = (typeof sourceNameValues)[number];
 export type AdminFairQuickFilterValue =
   (typeof adminFairQuickFilterValues)[number];
+export type AdminFairPageSizeValue = (typeof adminFairPageSizeValues)[number];
 
 export type AdminFairFilters = {
+  page: number;
+  pageSize: AdminFairPageSizeValue;
   q?: string;
   quick?: AdminFairQuickFilterValue;
   status?: FairStatusValue | "ALL";

@@ -48,6 +48,9 @@ export function AdminDashboardContent({ stats }: AdminDashboardContentProps) {
           <Button href="/admin/import/tobb" variant="outline">
             {t("adminImport.tobbTitle")}
           </Button>
+          <Button href="/admin/import/ifm" variant="outline">
+            {t("adminIfm.title")}
+          </Button>
         </div>
       </div>
 

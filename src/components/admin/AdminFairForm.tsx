@@ -193,9 +193,20 @@ export function AdminFairForm({ fair, mode, taxonomy }: AdminFairFormProps) {
             {mode === "create" ? t("adminPage.addFair") : t("adminPage.editFair")}
           </h1>
         </div>
-        <Button href="/admin/fairs" variant="outline">
-          {t("common.cancel")}
-        </Button>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          {mode === "edit" ? (
+            <Button
+              disabled={isSubmitting}
+              form="admin-fair-form"
+              type="submit"
+            >
+              {t("common.save")}
+            </Button>
+          ) : null}
+          <Button href="/admin/fairs" variant="outline">
+            {t("common.cancel")}
+          </Button>
+        </div>
       </div>
 
       <Card>
@@ -205,7 +216,11 @@ export function AdminFairForm({ fair, mode, taxonomy }: AdminFairFormProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <form className="space-y-6" onSubmit={handleSubmit}>
+          <form
+            className="space-y-6"
+            id="admin-fair-form"
+            onSubmit={handleSubmit}
+          >
             {error ? (
               <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
                 {error}

@@ -40,6 +40,18 @@ type SaveFairOptions = {
   payload: AdminFairPayload;
 };
 
+export const adminFairBulkActionValues = [
+  "archive",
+  "draft",
+  "markFeatured",
+  "markIstanbulPriority",
+  "publish",
+  "removeFeatured",
+  "removeIstanbulPriority",
+] as const;
+
+export type AdminFairBulkAction = (typeof adminFairBulkActionValues)[number];
+
 export async function createAdminFair({ adminUserId, payload }: SaveFairOptions) {
   const data = await parseFairPayload(payload);
 
@@ -130,6 +142,109 @@ export async function moveAdminFairToDraft(
   });
 }
 
+export async function deleteAdminFair(adminUserId: string, fairId: string) {
+  const fair = await prisma.fair.findUniqueOrThrow({
+    where: {
+      id: fairId,
+    },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+    },
+  });
+
+  await prisma.$transaction([
+    prisma.fairCategory.deleteMany({
+      where: {
+        fairId,
+      },
+    }),
+    prisma.fairSubcategory.deleteMany({
+      where: {
+        fairId,
+      },
+    }),
+    prisma.fairSource.deleteMany({
+      where: {
+        fairId,
+      },
+    }),
+    prisma.followedFair.deleteMany({
+      where: {
+        fairId,
+      },
+    }),
+    prisma.notificationLog.deleteMany({
+      where: {
+        fairId,
+      },
+    }),
+    prisma.fair.delete({
+      where: {
+        id: fairId,
+      },
+    }),
+    prisma.adminActionLog.create({
+      data: {
+        actionType: "DELETE",
+        adminUserId,
+        message: "DELETE_FAIR",
+        metadata: {
+          entityId: fair.id,
+          entityType: "FAIR",
+          name: fair.name,
+          slug: fair.slug,
+        },
+      },
+    }),
+  ]);
+}
+
+export async function bulkUpdateAdminFairs({
+  actionName,
+  adminUserId,
+  fairIds,
+}: {
+  actionName: AdminFairBulkAction;
+  adminUserId: string;
+  fairIds: string[];
+}) {
+  const uniqueFairIds = Array.from(
+    new Set(fairIds.map((fairId) => fairId.trim()).filter(Boolean)),
+  );
+
+  if (!uniqueFairIds.length) {
+    throw new Error("missing_fair_ids");
+  }
+
+  const data = getBulkUpdateData(actionName);
+  const result = await prisma.fair.updateMany({
+    data,
+    where: {
+      id: {
+        in: uniqueFairIds,
+      },
+    },
+  });
+
+  await logAdminAction({
+    actionType: "UPDATE",
+    adminUserId,
+    metadata: {
+      actionName,
+      count: result.count,
+      entityType: "FAIR",
+      fairIds: uniqueFairIds,
+      message: "BULK_UPDATE_FAIRS",
+    },
+  });
+
+  return {
+    count: result.count,
+  };
+}
+
 export async function toggleAdminFairFeatured(
   adminUserId: string,
   fairId: string,
@@ -186,6 +301,37 @@ export async function toggleAdminFairIstanbulPriority(
     fairId,
     metadata: { isIstanbulPriority: !fair.isIstanbulPriority },
   });
+}
+
+function getBulkUpdateData(actionName: AdminFairBulkAction): Prisma.FairUpdateManyMutationInput {
+  const actionMap = {
+    archive: {
+      isPublished: false,
+      status: "ARCHIVED",
+    },
+    draft: {
+      isPublished: false,
+      status: "DRAFT",
+    },
+    markFeatured: {
+      isFeatured: true,
+    },
+    markIstanbulPriority: {
+      isIstanbulPriority: true,
+    },
+    publish: {
+      isPublished: true,
+      status: "PUBLISHED",
+    },
+    removeFeatured: {
+      isFeatured: false,
+    },
+    removeIstanbulPriority: {
+      isIstanbulPriority: false,
+    },
+  } satisfies Record<AdminFairBulkAction, Prisma.FairUpdateManyMutationInput>;
+
+  return actionMap[actionName];
 }
 
 async function updateFairStatus(
@@ -363,9 +509,15 @@ async function logAdminAction({
   fairId,
   metadata,
 }: {
-  actionType: "CREATE" | "UPDATE" | "PUBLISH" | "UNPUBLISH" | "ARCHIVE";
+  actionType:
+    | "ARCHIVE"
+    | "CREATE"
+    | "DELETE"
+    | "PUBLISH"
+    | "UNPUBLISH"
+    | "UPDATE";
   adminUserId: string;
-  fairId: string;
+  fairId?: string;
   metadata?: Prisma.InputJsonValue;
 }) {
   await prisma.adminActionLog.create({
