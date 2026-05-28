@@ -32,6 +32,7 @@ export default async function ProfilePage() {
         email: true,
         gender: true,
         name: true,
+        passwordHash: true,
         phone: true,
         profession: true,
         surname: true,
@@ -43,6 +44,8 @@ export default async function ProfilePage() {
   if (!user) {
     redirect("/login?next=/profile");
   }
+
+  const { passwordHash, ...profileUser } = user;
 
   const notificationPreferences =
     await prisma.notificationPreference.upsert({
@@ -69,8 +72,9 @@ export default async function ProfilePage() {
       notificationPreferences={notificationPreferences}
       showDevEmailTest={process.env.NODE_ENV !== "production"}
       user={{
-        ...user,
+        ...profileUser,
         birthDate: user.birthDate ? user.birthDate.toISOString().slice(0, 10) : "",
+        hasPassword: Boolean(passwordHash),
       }}
     />
   );

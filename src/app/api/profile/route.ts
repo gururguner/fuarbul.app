@@ -74,6 +74,7 @@ export async function PATCH(request: Request) {
       email: true,
       gender: true,
       name: true,
+      passwordHash: true,
       phone: true,
       profession: true,
       surname: true,
@@ -83,10 +84,13 @@ export async function PATCH(request: Request) {
     },
   });
 
+  const { passwordHash, ...profileUser } = user;
+
   return NextResponse.json({
     user: {
-      ...user,
+      ...profileUser,
       birthDate: user.birthDate ? toDateInputValue(user.birthDate) : "",
+      hasPassword: Boolean(passwordHash),
     },
   });
 }

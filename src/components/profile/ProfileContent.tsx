@@ -19,6 +19,7 @@ type ProfileUser = {
   city: string;
   email: string;
   gender: string | null;
+  hasPassword: boolean;
   name: string;
   phone: string | null;
   profession: string;
@@ -140,140 +141,151 @@ export function ProfileContent({
       </div>
 
       <div className="grid gap-5 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <CardTitle>{t("profilePage.accountInfo")}</CardTitle>
-              {!isEditing ? (
-                <Button onClick={startEditing} size="sm" type="button">
-                  {t("profilePage.editProfile")}
-                </Button>
+        <div className="space-y-5">
+          <Card>
+            <CardHeader>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <CardTitle>{t("profilePage.accountInfo")}</CardTitle>
+                {!isEditing ? (
+                  <Button onClick={startEditing} size="sm" type="button">
+                    {t("profilePage.editProfile")}
+                  </Button>
+                ) : null}
+              </div>
+            </CardHeader>
+            <CardContent>
+              {message ? (
+                <p
+                  className={`mb-4 rounded-lg px-3 py-2 text-sm ${
+                    messageType === "success"
+                      ? "bg-emerald-50 text-emerald-700"
+                      : "bg-red-50 text-red-700"
+                  }`}
+                >
+                  {message}
+                </p>
               ) : null}
-            </div>
-          </CardHeader>
-          <CardContent>
-            {message ? (
-              <p
-                className={`mb-4 rounded-lg px-3 py-2 text-sm ${
-                  messageType === "success"
-                    ? "bg-emerald-50 text-emerald-700"
-                    : "bg-red-50 text-red-700"
-                }`}
-              >
-                {message}
-              </p>
-            ) : null}
 
-            {isEditing ? (
-              <form className="space-y-4" onSubmit={handleSubmit}>
-                <div className={inputGridClasses}>
+              {isEditing ? (
+                <form className="space-y-4" onSubmit={handleSubmit}>
+                  <div className={inputGridClasses}>
+                    <Input
+                      defaultValue={user.name}
+                      label={<RequiredLabel label={t("common.name")} />}
+                      name="name"
+                      required
+                    />
+                    <Input
+                      defaultValue={user.surname}
+                      label={<RequiredLabel label={t("common.surname")} />}
+                      name="surname"
+                      required
+                    />
+                  </div>
+
                   <Input
-                    defaultValue={user.name}
-                    label={<RequiredLabel label={t("common.name")} />}
-                    name="name"
-                    required
+                    disabled
+                    label={t("common.email")}
+                    name="email"
+                    readOnly
+                    value={user.email}
                   />
-                  <Input
-                    defaultValue={user.surname}
-                    label={<RequiredLabel label={t("common.surname")} />}
-                    name="surname"
-                    required
-                  />
-                </div>
 
-                <Input
-                  disabled
-                  label={t("common.email")}
-                  name="email"
-                  readOnly
-                  value={user.email}
-                />
+                  <div className={inputGridClasses}>
+                    <Input
+                      defaultValue={user.phone ?? ""}
+                      helperText={t("registerPage.phoneHelp")}
+                      label={t("common.phone")}
+                      name="phone"
+                      placeholder="+90 532 123 45 67"
+                      type="tel"
+                    />
+                    <CitySelect
+                      defaultValue={user.city}
+                      label={<RequiredLabel label={t("common.city")} />}
+                      name="city"
+                      placeholder={t("common.selectCity")}
+                      required
+                    />
+                  </div>
 
-                <div className={inputGridClasses}>
-                  <Input
-                    defaultValue={user.phone ?? ""}
-                    helperText={t("registerPage.phoneHelp")}
-                    label={t("common.phone")}
-                    name="phone"
-                    placeholder="+90 532 123 45 67"
-                    type="tel"
-                  />
-                  <CitySelect
-                    defaultValue={user.city}
-                    label={<RequiredLabel label={t("common.city")} />}
-                    name="city"
-                    placeholder={t("common.selectCity")}
-                    required
-                  />
-                </div>
+                  <div className={inputGridClasses}>
+                    <label className="block space-y-2">
+                      <span className="text-sm font-medium text-slate-700">
+                        <RequiredLabel label={t("common.profession")} />
+                      </span>
+                      <select
+                        className={selectClasses}
+                        defaultValue={user.profession}
+                        name="profession"
+                        required
+                      >
+                        {professionOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label[locale]}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
 
-                <div className={inputGridClasses}>
+                    <Input
+                      defaultValue={user.birthDate}
+                      label={t("common.birthDate")}
+                      name="birthDate"
+                      type="date"
+                    />
+                  </div>
+
                   <label className="block space-y-2">
                     <span className="text-sm font-medium text-slate-700">
-                      <RequiredLabel label={t("common.profession")} />
+                      {t("common.gender")}
                     </span>
                     <select
                       className={selectClasses}
-                      defaultValue={user.profession}
-                      name="profession"
-                      required
+                      defaultValue={user.gender ?? ""}
+                      name="gender"
                     >
-                      {professionOptions.map((option) => (
+                      <option value="">{t("gender.unspecified")}</option>
+                      {genderOptions.map((option) => (
                         <option key={option.value} value={option.value}>
-                          {option.label[locale]}
+                          {t(option.labelKey)}
                         </option>
                       ))}
                     </select>
                   </label>
 
-                  <Input
-                    defaultValue={user.birthDate}
-                    label={t("common.birthDate")}
-                    name="birthDate"
-                    type="date"
-                  />
-                </div>
+                  <p className="text-xs leading-5 text-slate-500">
+                    {t("registerPage.requiredFieldsNote")}
+                  </p>
 
-                <label className="block space-y-2">
-                  <span className="text-sm font-medium text-slate-700">
-                    {t("common.gender")}
-                  </span>
-                  <select
-                    className={selectClasses}
-                    defaultValue={user.gender ?? ""}
-                    name="gender"
-                  >
-                    <option value="">{t("gender.unspecified")}</option>
-                    {genderOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {t(option.labelKey)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <Button disabled={isSubmitting} type="submit">
+                      {t("common.save")}
+                    </Button>
+                    <Button
+                      onClick={cancelEditing}
+                      type="button"
+                      variant="outline"
+                    >
+                      {t("common.cancel")}
+                    </Button>
+                  </div>
+                </form>
+              ) : (
+                <ProfileDetails user={user} />
+              )}
+            </CardContent>
+          </Card>
 
-                <p className="text-xs leading-5 text-slate-500">
-                  {t("registerPage.requiredFieldsNote")}
-                </p>
-
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  <Button disabled={isSubmitting} type="submit">
-                    {t("common.save")}
-                  </Button>
-                  <Button
-                    onClick={cancelEditing}
-                    type="button"
-                    variant="outline"
-                  >
-                    {t("common.cancel")}
-                  </Button>
-                </div>
-              </form>
-            ) : (
-              <ProfileDetails user={user} />
-            )}
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>{t("profilePage.changePassword")}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <PasswordChangeForm hasPassword={user.hasPassword} />
+            </CardContent>
+          </Card>
+        </div>
 
         <div className="space-y-5">
           <Card>
@@ -316,6 +328,134 @@ export function ProfileContent({
         </div>
       </div>
     </MainContainer>
+  );
+}
+
+function PasswordChangeForm({ hasPassword }: { hasPassword: boolean }) {
+  const router = useRouter();
+  const { t } = useLanguage();
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState<"error" | "success" | null>(
+    null,
+  );
+
+  if (!hasPassword) {
+    return (
+      <p className="text-sm leading-6 text-slate-600">
+        {t("profilePage.googlePasswordAccount")}
+      </p>
+    );
+  }
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setMessage("");
+    setMessageType(null);
+
+    if (newPassword.length < 8) {
+      setMessage(t("profilePage.passwordTooShort"));
+      setMessageType("error");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setMessage(t("profilePage.passwordMismatch"));
+      setMessageType("error");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch("/api/profile/password", {
+        body: JSON.stringify({
+          confirmPassword,
+          currentPassword,
+          newPassword,
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        method: "PATCH",
+      });
+
+      if (response.status === 401) {
+        router.push("/login?next=/profile");
+        return;
+      }
+
+      if (!response.ok) {
+        const data = (await response.json()) as { error?: string };
+        setMessage(getPasswordChangeError(data.error, t));
+        setMessageType("error");
+        return;
+      }
+
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setMessage(t("profilePage.passwordUpdateSuccess"));
+      setMessageType("success");
+    } catch {
+      setMessage(t("profilePage.passwordUpdateError"));
+      setMessageType("error");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <form className="space-y-4" onSubmit={handleSubmit}>
+      <Input
+        autoComplete="current-password"
+        label={<RequiredLabel label={t("profilePage.currentPassword")} />}
+        name="currentPassword"
+        onChange={(event) => setCurrentPassword(event.target.value)}
+        required
+        type="password"
+        value={currentPassword}
+      />
+      <Input
+        autoComplete="new-password"
+        label={<RequiredLabel label={t("profilePage.newPassword")} />}
+        minLength={8}
+        name="newPassword"
+        onChange={(event) => setNewPassword(event.target.value)}
+        required
+        type="password"
+        value={newPassword}
+      />
+      <Input
+        autoComplete="new-password"
+        label={<RequiredLabel label={t("profilePage.confirmNewPassword")} />}
+        minLength={8}
+        name="confirmPassword"
+        onChange={(event) => setConfirmPassword(event.target.value)}
+        required
+        type="password"
+        value={confirmPassword}
+      />
+
+      {message ? (
+        <p
+          className={`rounded-lg px-3 py-2 text-sm ${
+            messageType === "success"
+              ? "bg-emerald-50 text-emerald-700"
+              : "bg-red-50 text-red-700"
+          }`}
+        >
+          {message}
+        </p>
+      ) : null}
+
+      <Button disabled={isSubmitting} type="submit">
+        {t("profilePage.updatePassword")}
+      </Button>
+    </form>
   );
 }
 
@@ -628,6 +768,33 @@ function getProfileUpdateError(
   }
 
   return t("profilePage.updateError");
+}
+
+function getPasswordChangeError(
+  errorCode: string | undefined,
+  t: (key: TranslationKey) => string,
+) {
+  if (errorCode === "current_password_incorrect") {
+    return t("profilePage.currentPasswordIncorrect");
+  }
+
+  if (errorCode === "password_mismatch") {
+    return t("profilePage.passwordMismatch");
+  }
+
+  if (errorCode === "password_too_short") {
+    return t("profilePage.passwordTooShort");
+  }
+
+  if (errorCode === "no_password_account") {
+    return t("profilePage.googlePasswordAccount");
+  }
+
+  if (errorCode === "missing_required_fields") {
+    return t("auth.missingRequiredFields");
+  }
+
+  return t("profilePage.passwordUpdateError");
 }
 
 function formatBirthDate(value: string, locale: "en" | "tr") {
