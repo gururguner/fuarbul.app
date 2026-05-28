@@ -1,7 +1,7 @@
 import "dotenv/config";
 
 import { PrismaPg } from "@prisma/adapter-pg";
-import { FairStatus, PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 
 const adapter = new PrismaPg({
   connectionString: process.env.DIRECT_URL || process.env.DATABASE_URL!,
@@ -400,7 +400,7 @@ async function upsertSampleFair(fair: (typeof sampleFairs)[number]) {
         hall: fair.hall,
         organizer: fair.organizer,
         officialWebsite: fair.officialWebsite,
-        status: FairStatus.PUBLISHED,
+        status: "PUBLISHED",
         isPublished: true,
         isFeatured: fair.isFeatured,
         isIstanbulPriority: fair.isIstanbulPriority,
@@ -423,7 +423,7 @@ async function upsertSampleFair(fair: (typeof sampleFairs)[number]) {
       hall: fair.hall,
       organizer: fair.organizer,
       officialWebsite: fair.officialWebsite,
-      status: FairStatus.PUBLISHED,
+      status: "PUBLISHED",
       isPublished: true,
       isFeatured: fair.isFeatured,
       isIstanbulPriority: fair.isIstanbulPriority,
