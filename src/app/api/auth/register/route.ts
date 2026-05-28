@@ -2,6 +2,7 @@ import { Gender } from "@prisma/client";
 import { hash } from "bcryptjs";
 import { NextResponse } from "next/server";
 
+import { normalizeTurkishMobilePhone } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
 import { isProfessionValue } from "@/lib/professions";
 import { normalizeTurkeyCity } from "@/lib/turkey-cities";
@@ -32,7 +33,8 @@ export async function POST(request: Request) {
   const rawCity = payload.city?.trim() ?? "";
   const city = normalizeTurkeyCity(rawCity);
   const profession = payload.profession?.trim() ?? "";
-  const phone = normalizePhone(payload.phone);
+  const rawPhone = payload.phone?.trim() ?? "";
+  const phone = rawPhone ? normalizeTurkishMobilePhone(rawPhone) : undefined;
 
   if (!name || !surname || !rawCity || !profession || !email || !password) {
     return NextResponse.json(
@@ -50,6 +52,10 @@ export async function POST(request: Request) {
       { error: "invalid_profession" },
       { status: 400 },
     );
+  }
+
+  if (rawPhone && !phone) {
+    return NextResponse.json({ error: "invalid_phone" }, { status: 400 });
   }
 
   if (!emailPattern.test(email)) {
@@ -100,12 +106,6 @@ export async function POST(request: Request) {
 
 function normalizeEmail(value?: string) {
   return value?.trim().toLowerCase() ?? "";
-}
-
-function normalizePhone(value?: string) {
-  const phone = value?.trim().replace(/\s+/g, " ") ?? "";
-
-  return phone || undefined;
 }
 
 function parseBirthDate(value?: string) {

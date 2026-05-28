@@ -2,6 +2,7 @@ import { Gender } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 import { auth } from "@/auth";
+import { normalizeTurkishMobilePhone } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
 import { isProfessionValue } from "@/lib/professions";
 import { normalizeTurkeyCity } from "@/lib/turkey-cities";
@@ -32,6 +33,8 @@ export async function PATCH(request: Request) {
   const rawCity = payload.city?.trim() ?? "";
   const city = normalizeTurkeyCity(rawCity);
   const profession = payload.profession?.trim() ?? "";
+  const rawPhone = payload.phone?.trim() ?? "";
+  const phone = rawPhone ? normalizeTurkishMobilePhone(rawPhone) : null;
 
   if (!name || !surname || !rawCity || !profession) {
     return NextResponse.json(
@@ -51,13 +54,17 @@ export async function PATCH(request: Request) {
     );
   }
 
+  if (rawPhone && !phone) {
+    return NextResponse.json({ error: "invalid_phone" }, { status: 400 });
+  }
+
   const user = await prisma.user.update({
     data: {
       birthDate: parseBirthDate(payload.birthDate),
       city,
       gender: parseGender(payload.gender),
       name,
-      phone: normalizePhone(payload.phone),
+      phone,
       profession,
       surname,
     },
@@ -82,12 +89,6 @@ export async function PATCH(request: Request) {
       birthDate: user.birthDate ? toDateInputValue(user.birthDate) : "",
     },
   });
-}
-
-function normalizePhone(value?: string) {
-  const phone = value?.trim().replace(/\s+/g, " ") ?? "";
-
-  return phone || null;
 }
 
 function parseBirthDate(value?: string) {

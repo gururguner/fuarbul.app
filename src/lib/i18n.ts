@@ -161,8 +161,7 @@ export const translations = {
       passwordHelp: "Şifre en az 8 karakter olmalıdır.",
       requiredFieldsNote: "* işaretli alanlar zorunludur.",
       professionPlaceholder: "Meslek seç",
-      phoneHelp:
-        "Opsiyonel. İleride SMS veya WhatsApp hatırlatmaları için kullanılabilir.",
+      phoneHelp: "Opsiyonel. Örnek: +90 532 123 45 67",
       alreadyHaveAccount: "Zaten hesabım var",
     },
     profilePage: {
@@ -279,6 +278,7 @@ export const translations = {
       invalidEmail: "Geçerli bir e-posta adresi gir.",
       missingRequiredFields: "Lütfen zorunlu alanları doldur.",
       invalidCity: "Lütfen geçerli bir şehir seç.",
+      invalidPhone: "Geçerli bir Türkiye cep telefonu numarası gir.",
       invalidProfession: "Lütfen geçerli bir meslek seç.",
       alreadyLoggedIn: "Zaten giriş yaptın.",
       switchAccountNote: "Hesap değiştirmek için önce çıkış yapmalısın.",
@@ -419,8 +419,7 @@ export const translations = {
       passwordHelp: "Password must be at least 8 characters.",
       requiredFieldsNote: "Fields marked with * are required.",
       professionPlaceholder: "Select profession",
-      phoneHelp:
-        "Optional. It may be used for SMS or WhatsApp reminders in the future.",
+      phoneHelp: "Optional. Example: +90 532 123 45 67",
       alreadyHaveAccount: "I already have an account",
     },
     profilePage: {
@@ -536,6 +535,7 @@ export const translations = {
       invalidEmail: "Enter a valid email address.",
       missingRequiredFields: "Please fill in the required fields.",
       invalidCity: "Please select a valid city.",
+      invalidPhone: "Enter a valid Turkish mobile phone number.",
       invalidProfession: "Please select a valid profession.",
       alreadyLoggedIn: "You are already logged in.",
       switchAccountNote: "To switch accounts, please log out first.",

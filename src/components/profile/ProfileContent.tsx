@@ -94,7 +94,8 @@ export function ProfileContent({
       });
 
       if (!response.ok) {
-        setMessage(t("profilePage.updateError"));
+        const data = (await response.json()) as { error?: string };
+        setMessage(getProfileUpdateError(data.error, t));
         setMessageType("error");
         return;
       }
@@ -191,9 +192,10 @@ export function ProfileContent({
                 <div className={inputGridClasses}>
                   <Input
                     defaultValue={user.phone ?? ""}
+                    helperText={t("registerPage.phoneHelp")}
                     label={t("common.phone")}
                     name="phone"
-                    placeholder="05xx xxx xx xx"
+                    placeholder="+90 532 123 45 67"
                     type="tel"
                   />
                   <CitySelect
@@ -603,6 +605,29 @@ function getGenderLabel(
   const option = genderOptions.find((item) => item.value === gender);
 
   return option ? t(option.labelKey) : gender;
+}
+
+function getProfileUpdateError(
+  errorCode: string | undefined,
+  t: (key: TranslationKey) => string,
+) {
+  if (errorCode === "invalid_phone") {
+    return t("auth.invalidPhone");
+  }
+
+  if (errorCode === "invalid_city") {
+    return t("auth.invalidCity");
+  }
+
+  if (errorCode === "invalid_profession") {
+    return t("auth.invalidProfession");
+  }
+
+  if (errorCode === "missing_required_fields") {
+    return t("auth.missingRequiredFields");
+  }
+
+  return t("profilePage.updateError");
 }
 
 function formatBirthDate(value: string, locale: "en" | "tr") {
