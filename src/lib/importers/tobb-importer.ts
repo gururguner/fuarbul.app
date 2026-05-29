@@ -2,6 +2,7 @@ import "server-only";
 
 import * as XLSX from "xlsx";
 
+import { discoverImportImage } from "@/lib/fair-image-backfill";
 import { prisma } from "@/lib/prisma";
 import { suggestFairCategorySlugs } from "@/lib/fair-category-matcher";
 import { toSlug } from "@/lib/slug";
@@ -89,6 +90,7 @@ type ImportTobbFairsOptions = {
 
 type ExistingFairMatch = {
   id: string;
+  imageUrl: string | null;
   isPublished: boolean;
   slug: string;
   status: "DRAFT" | "PUBLISHED" | "UPDATED" | "POSTPONED" | "CANCELLED" | "ARCHIVED";
@@ -302,6 +304,8 @@ export async function importTobbFairs({
       return result;
     }
 
+    const officialImageCache = new Map<string, Promise<string | null>>();
+
     for (const row of normalizedRows) {
       const existingFair = row.errors.length ? null : await findExistingFair(row);
       const duplicateUncertain = await getDuplicateUncertainty(row, existingFair);
@@ -344,10 +348,16 @@ export async function importTobbFairs({
           : shouldPublish
             ? "PUBLISHED"
             : "DRAFT";
+        const imageUrl = await getTobbImportImage(
+          row,
+          existingFair,
+          officialImageCache,
+        );
         const fairData = {
           city: row.city,
           description: row.description,
           endDate: row.endDate,
+          imageUrl,
           isFeatured: false,
           isIstanbulPriority: row.isIstanbulPriority,
           isPublished,
@@ -600,6 +610,28 @@ function updateAssessmentCounts(
   ) {
     result.draftSavedCount += 1;
   }
+}
+
+async function getTobbImportImage(
+  row: NormalizedTobbFairRow,
+  existingFair: ExistingFairMatch | null,
+  cache: Map<string, Promise<string | null>>,
+) {
+  if (!row.officialWebsite) {
+    return existingFair?.imageUrl ?? null;
+  }
+
+  if (!cache.has(row.officialWebsite)) {
+    cache.set(
+      row.officialWebsite,
+      discoverImportImage({
+        existingImageUrl: existingFair?.imageUrl,
+        officialWebsite: row.officialWebsite,
+      }),
+    );
+  }
+
+  return cache.get(row.officialWebsite)!;
 }
 
 async function getDuplicateUncertainty(
@@ -1088,6 +1120,7 @@ async function findExistingFair(row: NormalizedTobbFairRow): Promise<ExistingFai
         fair: {
           select: {
             id: true,
+            imageUrl: true,
             isPublished: true,
             slug: true,
             status: true,
@@ -1122,6 +1155,7 @@ async function findExistingFair(row: NormalizedTobbFairRow): Promise<ExistingFai
     },
     select: {
       id: true,
+      imageUrl: true,
       isPublished: true,
       slug: true,
       status: true,

@@ -34,6 +34,7 @@ export default async function EditAdminFairPage({
         endDate: toDateTimeInputValue(fair.endDate),
         hall: fair.hall ?? "",
         id: fair.id,
+        imageUrl: fair.imageUrl ?? "",
         isFeatured: fair.isFeatured,
         isIstanbulPriority: fair.isIstanbulPriority,
         isPublished: fair.isPublished,

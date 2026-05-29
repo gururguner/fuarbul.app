@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/Card";
+import { FairVisual } from "@/components/fairs/FairVisual";
 import type { Fair } from "@/types/fair";
 
 type FairCardProps = {
@@ -25,8 +26,9 @@ export function FairCard({ fair, isFollowing = false }: FairCardProps) {
     : null;
 
   return (
-    <Card className="flex h-full flex-col">
-      <CardHeader>
+    <Card className="flex h-full flex-col overflow-hidden">
+      <FairVisual fair={fair} localizedFair={displayFair} />
+      <CardHeader className="pb-3">
         <div className="flex flex-wrap items-center gap-2">
           {visibleCategories ? (
             visibleCategories.map((category) => (
@@ -47,10 +49,12 @@ export function FairCard({ fair, isFollowing = false }: FairCardProps) {
             <Badge variant="muted">{t("nav.following")}</Badge>
           ) : null}
         </div>
-        <CardTitle>{displayFair.name}</CardTitle>
+        <CardTitle className="line-clamp-2">{displayFair.name}</CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-1 flex-col gap-4">
-        <p className="text-sm leading-6 text-slate-600">{displayFair.summary}</p>
+      <CardContent className="flex flex-1 flex-col gap-4 pt-0">
+        <p className="line-clamp-3 text-sm leading-6 text-slate-600">
+          {displayFair.summary}
+        </p>
         <dl className="grid gap-2 text-sm text-slate-700">
           <div className="flex items-center justify-between gap-4">
             <dt className="font-medium text-slate-500">{t("common.date")}</dt>

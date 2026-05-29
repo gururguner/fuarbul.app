@@ -35,6 +35,7 @@ const adminFairListSelect = {
   city: true,
   endDate: true,
   id: true,
+  imageUrl: true,
   isFeatured: true,
   isIstanbulPriority: true,
   isPublished: true,

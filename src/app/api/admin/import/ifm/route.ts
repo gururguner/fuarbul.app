@@ -53,7 +53,7 @@ async function getImportInput({
 
     return {
       sourceText: pastedText,
-      sourceUrl: sourceUrl || null,
+      sourceUrl: sourceUrl ? validateImportUrl(sourceUrl).toString() : null,
     };
   }
 
@@ -62,28 +62,9 @@ async function getImportInput({
   }
 
   const url = validateImportUrl(sourceUrl);
-  const response = await fetch(url, {
-    cache: "no-store",
-  });
-
-  if (!response.ok) {
-    throw new Error("url_fetch_failed");
-  }
-
-  const contentLength = response.headers.get("content-length");
-
-  if (contentLength && Number(contentLength) > maxSourceSize) {
-    throw new Error("source_too_large");
-  }
-
-  const sourceText = await response.text();
-
-  if (new Blob([sourceText]).size > maxSourceSize) {
-    throw new Error("source_too_large");
-  }
 
   return {
-    sourceText,
+    sourceText: "",
     sourceUrl: url.toString(),
   };
 }
@@ -97,7 +78,13 @@ function validateImportUrl(value: string) {
     throw new Error("invalid_url");
   }
 
-  if (!["http:", "https:"].includes(url.protocol) || isBlockedHostname(url.hostname)) {
+  const hostname = url.hostname.toLowerCase();
+
+  if (
+    !["http:", "https:"].includes(url.protocol) ||
+    isBlockedHostname(hostname) ||
+    !["ifm.com.tr", "www.ifm.com.tr"].includes(hostname)
+  ) {
     throw new Error("invalid_url");
   }
 

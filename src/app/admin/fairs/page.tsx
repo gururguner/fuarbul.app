@@ -35,6 +35,7 @@ export default async function AdminFairsPage({
         city: fair.city,
         endDate: fair.endDate.toISOString(),
         id: fair.id,
+        imageUrl: fair.imageUrl,
         isFeatured: fair.isFeatured,
         isIstanbulPriority: fair.isIstanbulPriority,
         isPastFair: fair.isPastFair,

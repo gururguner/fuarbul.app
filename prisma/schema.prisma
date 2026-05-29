@@ -147,6 +147,7 @@ model Fair {
   hall               String?
   organizer          String?
   officialWebsite    String?
+  imageUrl           String?
   status             FairStatus @default(DRAFT)
   isPublished        Boolean    @default(false)
   isFeatured         Boolean    @default(false)

@@ -50,6 +50,8 @@ export type Fair = {
   subcategories?: FairTaxonomy[];
   translations: Record<FairLocale, LocalizedFairFields>;
   website: string;
+  imageUrl?: string | null;
+  sourceNames?: string[];
   isFeatured?: boolean;
   isPast: boolean;
 };

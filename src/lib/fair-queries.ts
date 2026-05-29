@@ -28,6 +28,11 @@ const fairInclude = {
       subcategory: true,
     },
   },
+  sources: {
+    select: {
+      sourceName: true,
+    },
+  },
 } satisfies Prisma.FairInclude;
 
 type FairWithRelations = Prisma.FairGetPayload<{
@@ -296,6 +301,8 @@ function mapFairToUiFair(fair: FairWithRelations): Fair {
     subcategories,
     translations: buildFairTranslations(fair),
     website: fair.officialWebsite ?? "#",
+    imageUrl: fair.imageUrl ?? null,
+    sourceNames: fair.sources.map((source) => source.sourceName),
     isFeatured: fair.isFeatured,
     isPast: isPastFair(fair.endDate),
   };

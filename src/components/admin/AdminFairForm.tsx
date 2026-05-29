@@ -46,6 +46,7 @@ type AdminFairFormValue = {
   endDate: string;
   hall: string;
   id: string;
+  imageUrl: string;
   isFeatured: boolean;
   isIstanbulPriority: boolean;
   isPublished: boolean;
@@ -69,6 +70,7 @@ const emptyFair: AdminFairFormValue = {
   endDate: "",
   hall: "",
   id: "",
+  imageUrl: "",
   isFeatured: false,
   isIstanbulPriority: false,
   isPublished: false,
@@ -143,6 +145,7 @@ export function AdminFairForm({ fair, mode, taxonomy }: AdminFairFormProps) {
       district: getFormValue(formData, "district"),
       endDate: getFormValue(formData, "endDate"),
       hall: getFormValue(formData, "hall"),
+      imageUrl: getFormValue(formData, "imageUrl"),
       isFeatured: formData.get("isFeatured") === "on",
       isIstanbulPriority: formData.get("isIstanbulPriority") === "on",
       isPublished: formData.get("isPublished") === "on",
@@ -312,6 +315,33 @@ export function AdminFairForm({ fair, mode, taxonomy }: AdminFairFormProps) {
                 name="officialWebsite"
                 type="url"
               />
+            </div>
+
+            <div className={inputGridClasses}>
+              <div className="space-y-2">
+                <Input
+                  defaultValue={initialFair.imageUrl}
+                  label={t("common.imageUrl")}
+                  name="imageUrl"
+                  type="url"
+                />
+                <p className="text-xs leading-5 text-slate-500">
+                  {t("adminPage.ifmFallbackHelp")}
+                </p>
+              </div>
+              {initialFair.imageUrl ? (
+                <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                  <p className="text-sm font-medium text-slate-700">
+                    {t("adminIfm.logo")}
+                  </p>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    alt={initialFair.name}
+                    className="mt-2 h-20 w-full object-contain"
+                    src={initialFair.imageUrl}
+                  />
+                </div>
+              ) : null}
             </div>
 
             <div className={inputGridClasses}>

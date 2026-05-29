@@ -29,6 +29,7 @@ type AdminFairListItem = {
   city: string;
   endDate: string;
   id: string;
+  imageUrl: string | null;
   isFeatured: boolean;
   isIstanbulPriority: boolean;
   isPastFair: boolean;
@@ -55,6 +56,13 @@ type CategoryBackfillResult = {
   addedRelationCount: number;
   scannedCount: number;
   stillMissingCount: number;
+  updatedCount: number;
+};
+
+type ImageUpdateResult = {
+  failedCount: number;
+  scannedCount: number;
+  skippedCount: number;
   updatedCount: number;
 };
 
@@ -85,6 +93,10 @@ export function AdminFairsPageContent({
   const [backfillResult, setBackfillResult] =
     useState<CategoryBackfillResult | null>(null);
   const [backfillError, setBackfillError] = useState("");
+  const [isUpdatingImages, setIsUpdatingImages] = useState(false);
+  const [imageUpdateResult, setImageUpdateResult] =
+    useState<ImageUpdateResult | null>(null);
+  const [imageUpdateError, setImageUpdateError] = useState("");
   const [deleteCandidate, setDeleteCandidate] =
     useState<AdminFairListItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -297,6 +309,38 @@ export function AdminFairsPageContent({
     }
   };
 
+  const runImageUpdate = async () => {
+    if (isUpdatingImages) {
+      return;
+    }
+
+    setImageUpdateError("");
+    setImageUpdateResult(null);
+    setIsUpdatingImages(true);
+
+    try {
+      const response = await fetch("/api/admin/fairs/update-images", {
+        method: "POST",
+      });
+      const data = (await response.json()) as {
+        error?: string;
+        result?: ImageUpdateResult;
+      };
+
+      if (!response.ok || !data.result) {
+        setImageUpdateError(t("adminPage.imageUpdateFailed"));
+        return;
+      }
+
+      setImageUpdateResult(data.result);
+      router.refresh();
+    } catch {
+      setImageUpdateError(t("adminPage.imageUpdateFailed"));
+    } finally {
+      setIsUpdatingImages(false);
+    }
+  };
+
   return (
     <MainContainer className="py-10 sm:py-14">
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -319,11 +363,21 @@ export function AdminFairsPageContent({
               ? t("adminPage.categoryBackfillRunning")
               : t("adminPage.suggestMissingCategories")}
           </Button>
+          <Button
+            disabled={isUpdatingImages}
+            onClick={runImageUpdate}
+            type="button"
+            variant="outline"
+          >
+            {isUpdatingImages
+              ? t("adminPage.imageUpdateRunning")
+              : t("adminPage.updateImages")}
+          </Button>
           <Button href="/admin/fairs/new">{t("adminPage.addFair")}</Button>
         </div>
       </div>
 
-      {backfillResult || backfillError ? (
+      {backfillResult || backfillError || imageUpdateResult || imageUpdateError ? (
         <div className="mb-6 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm">
           {backfillResult ? (
             <p className="font-medium text-emerald-800">
@@ -332,6 +386,14 @@ export function AdminFairsPageContent({
           ) : null}
           {backfillError ? (
             <p className="font-medium text-red-700">{backfillError}</p>
+          ) : null}
+          {imageUpdateResult ? (
+            <p className="font-medium text-emerald-800">
+              {formatImageUpdateResult(imageUpdateResult, t)}
+            </p>
+          ) : null}
+          {imageUpdateError ? (
+            <p className="font-medium text-red-700">{imageUpdateError}</p>
           ) : null}
         </div>
       ) : null}
@@ -473,6 +535,19 @@ export function AdminFairsPageContent({
                     onChange={() => toggleFairSelection(fair.id)}
                     type="checkbox"
                   />
+                  {fair.imageUrl ? (
+                    <div className="hidden h-14 w-14 shrink-0 rounded-lg border border-slate-200 bg-slate-50 p-1 sm:block">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        alt={fair.name}
+                        className="h-full w-full object-contain"
+                        onError={(event) => {
+                          event.currentTarget.parentElement?.classList.add("hidden");
+                        }}
+                        src={fair.imageUrl}
+                      />
+                    </div>
+                  ) : null}
                   <div>
                     <CardTitle>{fair.name}</CardTitle>
                     <p className="mt-1 text-sm text-slate-500">{fair.slug}</p>
@@ -901,6 +976,15 @@ function formatBackfillResult(
     .replace("{scannedCount}", String(result.scannedCount))
     .replace("{updatedCount}", String(result.updatedCount))
     .replace("{stillMissingCount}", String(result.stillMissingCount));
+}
+
+function formatImageUpdateResult(
+  result: ImageUpdateResult,
+  t: (key: TranslationKey) => string,
+) {
+  return t("adminPage.imageUpdateResult")
+    .replace("{scannedCount}", String(result.scannedCount))
+    .replace("{updatedCount}", String(result.updatedCount));
 }
 
 function getAdminFairsHref(

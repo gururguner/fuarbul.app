@@ -208,6 +208,22 @@ header. The route also accepts Vercel production cron requests with the
 `vercel-cron/1.0` user agent, while still requiring `CRON_SECRET` to exist in
 production.
 
+## Admin Imports
+
+The TOBB importer reads Excel data. The IFM importer renders the IFM calendar
+with a headless browser, extracts `/tr/fuarlar/...` detail links, then parses the
+`Fuar Künyesi` fields from each detail page.
+
+The IFM browser path uses:
+
+- `playwright-core`
+- `@sparticuz/chromium`
+
+On Vercel, the route runs in the Node.js runtime and uses the Sparticuz Chromium
+binary. In local Windows development, it falls back to installed Chrome or Edge
+when the packaged serverless Chromium path is not usable. Manual HTML/text paste
+remains available only as an emergency fallback.
+
 ## Vercel Deployment
 
 1. Push the project to GitHub.

@@ -19,6 +19,7 @@ export type AdminFairPayload = {
   district?: unknown;
   endDate?: unknown;
   hall?: unknown;
+  imageUrl?: unknown;
   isFeatured?: unknown;
   isIstanbulPriority?: unknown;
   isPublished?: unknown;
@@ -385,6 +386,7 @@ async function parseFairPayload(payload: AdminFairPayload) {
     district: getNullableString(payload.district),
     endDate,
     hall: getNullableString(payload.hall),
+    imageUrl: getNullableString(payload.imageUrl),
     isFeatured: getBoolean(payload.isFeatured),
     isIstanbulPriority: getBoolean(payload.isIstanbulPriority),
     isPublished: isArchivedOrDraft ? false : getBoolean(payload.isPublished),
@@ -410,6 +412,7 @@ function buildFairData(data: Awaited<ReturnType<typeof parseFairPayload>>) {
     district: data.district,
     endDate: data.endDate,
     hall: data.hall,
+    imageUrl: data.imageUrl,
     isFeatured: data.isFeatured,
     isIstanbulPriority: data.isIstanbulPriority,
     isPublished: data.isPublished,

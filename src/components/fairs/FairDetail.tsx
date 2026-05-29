@@ -6,6 +6,7 @@ import { useState, useTransition } from "react";
 
 import { MainContainer } from "@/components/layout/MainContainer";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { FairVisual } from "@/components/fairs/FairVisual";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import type { Fair } from "@/types/fair";
@@ -72,6 +73,14 @@ export function FairDetail({
           </div>
 
           <div className="space-y-4">
+            {(fair.imageUrl || fair.sourceNames?.includes("IFM")) ? (
+              <FairVisual
+                className="max-w-xl"
+                fair={fair}
+                localizedFair={displayFair}
+                size="detail"
+              />
+            ) : null}
             <h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-5xl">
               {displayFair.name}
             </h1>
