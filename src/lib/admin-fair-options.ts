@@ -7,7 +7,7 @@ export const fairStatusValues = [
   "ARCHIVED",
 ] as const;
 
-export const sourceNameValues = ["TOBB", "IFM", "TUYAP", "MANUAL", "OTHER"] as const;
+export const sourceNameValues = ["TOBB", "TUYAP", "MANUAL", "OTHER"] as const;
 
 export const adminFairQuickFilterValues = [
   "upcoming",

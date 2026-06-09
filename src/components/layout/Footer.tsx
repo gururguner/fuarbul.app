@@ -2,6 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import type { TranslationKey } from "@/lib/i18n";
@@ -27,8 +28,14 @@ const adminFooterLink = { href: "/admin", labelKey: "nav.admin" } satisfies Foot
 
 export function Footer() {
   const { data: session, status } = useSession();
+  const pathname = usePathname();
   const { t } = useLanguage();
   const isAdmin = session?.user?.role === "ADMIN";
+
+  if (pathname === "/maintenance") {
+    return null;
+  }
+
   const footerLinks: FooterLink[] =
     status === "authenticated"
       ? isAdmin

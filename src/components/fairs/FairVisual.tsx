@@ -22,17 +22,14 @@ export function FairVisual({
   const { t, taxonomyLabel } = useLanguage();
   const [imageFailed, setImageFailed] = useState(false);
   const hasImage = Boolean(fair.imageUrl && !imageFailed);
-  const isIfmFair = fair.sourceNames?.includes("IFM");
   const placeholderClassName = getPlaceholderClassName(fair);
   const primaryCategory = fair.categories?.[0] ?? null;
-  const placeholderLabel = isIfmFair
-    ? t("fairVisual.ifmFallback")
-    : primaryCategory
-      ? t("fairVisual.categoryFallback").replace(
-          "{category}",
-          taxonomyLabel(primaryCategory),
-        )
-      : t("fairVisual.defaultFallback");
+  const placeholderLabel = primaryCategory
+    ? t("fairVisual.categoryFallback").replace(
+        "{category}",
+        taxonomyLabel(primaryCategory),
+      )
+    : t("fairVisual.defaultFallback");
 
   return (
     <div
@@ -58,18 +55,6 @@ export function FairVisual({
           onError={() => setImageFailed(true)}
           src={fair.imageUrl ?? ""}
         />
-      ) : isIfmFair ? (
-        <div className="flex flex-col items-center text-center">
-          <span className="rounded-full border border-white/60 bg-white/70 px-3 py-1 text-xs font-bold tracking-wide text-slate-700 shadow-sm">
-            IFM
-          </span>
-          <span className="mt-3 max-w-48 text-sm font-semibold text-slate-800">
-            {placeholderLabel}
-          </span>
-          <span className="mt-2 text-[11px] font-semibold tracking-wide text-slate-500">
-            fuarbul
-          </span>
-        </div>
       ) : (
         <div className="flex flex-col items-center text-center">
           <span className="h-8 w-16 rounded-full border border-white/60 bg-white/65 shadow-sm" />
@@ -88,10 +73,6 @@ export function FairVisual({
 function getPlaceholderClassName(fair: Fair) {
   const slugs = fair.categories?.map((category) => category.slug) ?? [];
   const slugText = slugs.join(" ");
-
-  if (fair.sourceNames?.includes("IFM")) {
-    return "bg-[linear-gradient(135deg,#e0f2fe_0%,#ecfeff_45%,#f8fafc_100%)]";
-  }
 
   if (/teknoloji|yazilim|yapay-zeka|software/.test(slugText)) {
     return "bg-[linear-gradient(135deg,#dbeafe_0%,#ecfeff_52%,#f8fafc_100%)]";

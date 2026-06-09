@@ -31,6 +31,7 @@ export type LocalizedFairFields = {
   dateRange: string;
   city: string;
   venue: string;
+  hall?: string | null;
   organizer: string;
 };
 
@@ -51,6 +52,7 @@ export type Fair = {
   translations: Record<FairLocale, LocalizedFairFields>;
   website: string;
   imageUrl?: string | null;
+  hall?: string | null;
   sourceNames?: string[];
   isFeatured?: boolean;
   isPast: boolean;

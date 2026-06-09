@@ -134,6 +134,7 @@ Create a Resend account, then add these variables to `.env`:
 RESEND_API_KEY="your-resend-api-key"
 EMAIL_FROM="fuarbul <noreply@mail.fuarbul.app>"
 CRON_SECRET="your-long-random-cron-secret"
+MAINTENANCE_MODE="true"
 ```
 
 For local testing without a verified domain, Resend's development sender can be
@@ -210,19 +211,48 @@ production.
 
 ## Admin Imports
 
-The TOBB importer reads Excel data. The IFM importer renders the IFM calendar
-with a headless browser, extracts `/tr/fuarlar/...` detail links, then parses the
-`Fuar Künyesi` fields from each detail page.
+TOBB is the active fair import source for fuarbul. The TOBB importer reads Excel
+calendar data, creates or updates fair records, and keeps imported fairs in
+admin review/publish workflows.
 
-The IFM browser path uses:
+TOBB is the only supported fair import workflow. Other source-specific import
+routes and helpers are intentionally not exposed in the admin panel.
 
-- `playwright-core`
-- `@sparticuz/chromium`
+## Maintenance Mode
 
-On Vercel, the route runs in the Node.js runtime and uses the Sparticuz Chromium
-binary. In local Windows development, it falls back to installed Chrome or Edge
-when the packaged serverless Chromium path is not usable. Manual HTML/text paste
-remains available only as an emergency fallback.
+Public pages can be temporarily closed with maintenance mode while admin work
+continues. Maintenance mode is enabled by default unless this variable is set:
+
+```bash
+MAINTENANCE_MODE="false"
+```
+
+When maintenance mode is enabled:
+
+- Public pages redirect to `/maintenance`.
+- `/admin` remains available.
+- `/api` remains available so authentication, admin actions and TOBB import keep
+  working.
+- `/login?next=/admin` remains available for admin access.
+
+To reopen the public site, set `MAINTENANCE_MODE=false` in the deployment
+environment and redeploy.
+
+## Fair Data Reset
+
+To remove all existing fair records before importing a clean TOBB list, use the
+SQL file:
+
+```bash
+prisma/sql/clear-all-fairs.sql
+```
+
+The file includes pre-delete count queries, FK-safe delete statements and
+post-delete verification counts. Take a database backup first, run the count
+section, review the numbers, then run the delete transaction.
+
+The current schema uses `cuid()` string IDs, so there are no identity sequences
+to reset after deletion.
 
 ## Vercel Deployment
 

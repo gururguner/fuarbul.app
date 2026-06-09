@@ -520,6 +520,7 @@ const categoryRules: CategoryRule[] = [
 export function suggestFairCategorySlugs(
   input: FairCategoryMatchInput,
 ): FairCategoryMatchResult {
+  const topicText = createSearchableText(input.topic ?? "");
   const nameText = createSearchableText(input.name ?? "");
   const allText = createSearchableText(
     [
@@ -534,12 +535,13 @@ export function suggestFairCategorySlugs(
       .filter(Boolean)
       .join(" "),
   );
+  const topicSlugs = getMatchingSlugs(topicText);
   const nameSlugs = getMatchingSlugs(nameText);
   const allSlugs = getMatchingSlugs(allText);
 
   return {
     matchedFromName: nameSlugs.length > 0,
-    slugs: Array.from(new Set([...nameSlugs, ...allSlugs])),
+    slugs: Array.from(new Set([...topicSlugs, ...nameSlugs, ...allSlugs])),
   };
 }
 

@@ -326,13 +326,13 @@ export function AdminFairForm({ fair, mode, taxonomy }: AdminFairFormProps) {
                   type="url"
                 />
                 <p className="text-xs leading-5 text-slate-500">
-                  {t("adminPage.ifmFallbackHelp")}
+                  {t("adminPage.imageFallbackHelp")}
                 </p>
               </div>
               {initialFair.imageUrl ? (
                 <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
                   <p className="text-sm font-medium text-slate-700">
-                    {t("adminIfm.logo")}
+                    {t("common.imageUrl")}
                   </p>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img

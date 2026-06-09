@@ -302,6 +302,7 @@ function mapFairToUiFair(fair: FairWithRelations): Fair {
     translations: buildFairTranslations(fair),
     website: fair.officialWebsite ?? "#",
     imageUrl: fair.imageUrl ?? null,
+    hall: fair.hall,
     sourceNames: fair.sources.map((source) => source.sourceName),
     isFeatured: fair.isFeatured,
     isPast: isPastFair(fair.endDate),
@@ -502,6 +503,7 @@ function buildFairTranslations(
     description,
     city: fair.city,
     venue: fair.venue,
+    hall: fair.hall,
     organizer: fair.organizer ?? "-",
   };
   const overrides = seededFairTranslations[fair.slug];

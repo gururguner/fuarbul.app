@@ -3,6 +3,7 @@
 import { signOut, useSession } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { useLanguage } from "@/components/providers/LanguageProvider";
@@ -15,9 +16,14 @@ const navItems = [
 
 export function Header() {
   const { data: session, status } = useSession();
+  const pathname = usePathname();
   const { t } = useLanguage();
   const isAuthenticated = status === "authenticated";
   const isAdmin = session?.user?.role === "ADMIN";
+
+  if (pathname === "/maintenance") {
+    return null;
+  }
 
   return (
     <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">

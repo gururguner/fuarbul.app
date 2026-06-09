@@ -781,14 +781,14 @@ function normalizeWebsite(value: string | null) {
 }
 
 function getIstanbulPriority(city: string, venue: string) {
+  const normalizedCity = toSlug(city);
   const normalizedVenue = toSlug(venue);
 
   return (
-    city === "İstanbul" ||
+    normalizedCity === "istanbul" ||
     normalizedVenue.includes("istanbul-fuar-merkezi") ||
     normalizedVenue.includes("tuyap") ||
-    normalizedVenue.includes("lutfi-kirdar") ||
-    normalizedVenue.includes("ifm")
+    normalizedVenue.includes("lutfi-kirdar")
   );
 }
 

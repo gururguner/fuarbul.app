@@ -2,6 +2,10 @@ import { notFound } from "next/navigation";
 
 import { AdminFairForm } from "@/components/admin/AdminFairForm";
 import { getAdminFairById, getAdminTaxonomy } from "@/lib/admin-fair-queries";
+import {
+  sourceNameValues,
+  type SourceNameValue,
+} from "@/lib/admin-fair-options";
 
 type EditAdminFairPageProps = {
   params: Promise<{
@@ -42,7 +46,7 @@ export default async function EditAdminFairPage({
         officialWebsite: fair.officialWebsite ?? "",
         organizer: fair.organizer ?? "",
         slug: fair.slug,
-        sourceName: fair.sources[0]?.sourceName ?? "",
+        sourceName: toEditableSourceName(fair.sources[0]?.sourceName),
         sourceUrl: fair.sources[0]?.sourceUrl ?? "",
         startDate: toDateTimeInputValue(fair.startDate),
         status: fair.status,
@@ -59,4 +63,12 @@ export default async function EditAdminFairPage({
 
 function toDateTimeInputValue(date: Date) {
   return date.toISOString().slice(0, 16);
+}
+
+function toEditableSourceName(
+  sourceName: string | null | undefined,
+): SourceNameValue | "" {
+  return sourceNameValues.includes(sourceName as SourceNameValue)
+    ? (sourceName as SourceNameValue)
+    : "";
 }

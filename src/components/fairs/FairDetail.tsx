@@ -73,7 +73,7 @@ export function FairDetail({
           </div>
 
           <div className="space-y-4">
-            {(fair.imageUrl || fair.sourceNames?.includes("IFM")) ? (
+            {fair.imageUrl ? (
               <FairVisual
                 className="max-w-xl"
                 fair={fair}
@@ -84,15 +84,15 @@ export function FairDetail({
             <h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-5xl">
               {displayFair.name}
             </h1>
-            <p className="max-w-3xl text-lg leading-8 text-slate-600">
-              {displayFair.description}
-            </p>
           </div>
 
           <dl className="grid gap-4 rounded-lg border border-slate-200 bg-white p-5 shadow-sm sm:grid-cols-2">
             <DetailItem label={t("common.date")} value={displayFair.dateRange} />
             <DetailItem label={t("common.city")} value={displayFair.city} />
             <DetailItem label={t("common.venue")} value={displayFair.venue} />
+            {displayFair.hall ? (
+              <DetailItem label={t("common.hall")} value={displayFair.hall} />
+            ) : null}
             <DetailItem
               label={t("common.category")}
               value={
@@ -106,6 +106,19 @@ export function FairDetail({
               value={displayFair.organizer}
             />
           </dl>
+
+          {displayFair.description ? (
+            <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+              <h2 className="text-xl font-semibold text-slate-950">
+                {t("fairDetail.aboutTitle")}
+              </h2>
+              <div className="mt-4 space-y-4 text-base leading-7 text-slate-700">
+                {splitDescriptionParagraphs(displayFair.description).map((paragraph) => (
+                  <p key={paragraph}>{paragraph}</p>
+                ))}
+              </div>
+            </section>
+          ) : null}
 
           {fair.isPast ? (
             <p className="rounded-lg border border-amber-100 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
@@ -172,4 +185,11 @@ function DetailItem({ label, value }: { label: string; value: string }) {
       <dd className="mt-1 text-base font-semibold text-slate-950">{value}</dd>
     </div>
   );
+}
+
+function splitDescriptionParagraphs(description: string) {
+  return description
+    .split(/\n{2,}|\r?\n/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
 }

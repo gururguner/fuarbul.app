@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import { useLanguage } from "@/components/providers/LanguageProvider";
 
@@ -29,12 +30,13 @@ const authenticatedMobileItems = [
 
 export function MobileNav() {
   const { status } = useSession();
+  const pathname = usePathname();
   const { t } = useLanguage();
   const isAuthenticated = status === "authenticated";
   const mobileItems =
     isAuthenticated ? authenticatedMobileItems : publicMobileItems;
 
-  if (status === "loading") {
+  if (pathname === "/maintenance" || status === "loading") {
     return null;
   }
 
